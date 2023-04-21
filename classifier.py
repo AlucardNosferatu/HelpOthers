@@ -10,20 +10,25 @@ import seaborn as sns  #
 import matplotlib.pyplot as plt  #
 from sklearn.metrics import roc_curve, roc_auc_score, classification_report
 
+# 负样本
 xlsx_a = 'data/featureTable/aa.xlsx'
+# 正样本
 xlsx_b = 'data/featureTable/bb.xlsx'
 data_a = pd.read_excel(xlsx_a)
 data_b = pd.read_excel(xlsx_b)
 print(data_a.shape, data_b.shape)
 
+# 行数为样本个数，列数为特征维度
 rows_a, cols_a = data_a.shape
 rows_b, cols_b = data_b.shape
+# 生成标签0和标签1
 labels_a = np.zeros(rows_a)
 labels_b = np.ones(rows_b)
+# 把标签加入数据（特征维度+1）
 data_a.insert(0, 'label', labels_a)
 data_b.insert(0, 'label', labels_b)
 data = pd.concat([data_a, data_b])
-
+# 划分测试集和训练集
 data_train, data_test = train_test_split(data, test_size=0.3, random_state=15)
 data_train_a = data_train[:][data_train['label'] == 0]
 data_train_b = data_train[:][data_train['label'] == 1]
