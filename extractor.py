@@ -6,30 +6,30 @@ from radiomics import featureextractor
 imageFile = 'data/featureExtraction/brain1/brain1_image.nrrd'
 maskFile = 'data/featureExtraction/brain1/brain1_label.nrrd'
 
-extractor = featureextractor.RadiomicsFeatureExtractor()
-featureVector = extractor.execute(imageFile, maskFile)
-for featureName in featureVector.keys():
-    print("%s: %s" % (featureName, featureVector[featureName]))
+# extractor = featureextractor.RadiomicsFeatureExtractor()
+# featureVector = extractor.execute(imageFile, maskFile)
+# for featureName in featureVector.keys():
+#     print("%s: %s" % (featureName, featureVector[featureName]))
 
-extractor.disableAllFeatures()
-extractor.enableFeaturesByName(firstorder=['Mean', 'Skewness'])
+# extractor.disableAllFeatures()
+# extractor.enableFeaturesByName(firstorder=['Mean', 'Skewness'])
 
-featureVector = extractor.execute(imageFile, maskFile)
-for featureName in featureVector.keys():
-    print("%s: %s" % (featureName, featureVector[featureName]))
+# featureVector = extractor.execute(imageFile, maskFile)
+# for featureName in featureVector.keys():
+#     print("%s: %s" % (featureName, featureVector[featureName]))
 
-extractor.disableAllFeatures()
-extractor.enableFeatureClassByName('glcm')
+# extractor.disableAllFeatures()
+# extractor.enableFeatureClassByName('glcm')
 
-featureVector = extractor.execute(imageFile, maskFile)
-for featureName in featureVector.keys():
-    print("%s: %s" % (featureName, featureVector[featureName]))
+# featureVector = extractor.execute(imageFile, maskFile)
+# for featureName in featureVector.keys():
+#     print("%s: %s" % (featureName, featureVector[featureName]))
 
-extractor.enableImageTypes(Original={}, LoG={}, Wavelet={})
+# extractor.enableImageTypes(Original={}, LoG={}, Wavelet={})
 
-featureVector = extractor.execute(imageFile, maskFile)
-for featureName in featureVector.keys():
-    print("%s: %s" % (featureName, featureVector[featureName]))
+# featureVector = extractor.execute(imageFile, maskFile)
+# for featureName in featureVector.keys():
+#     print("%s: %s" % (featureName, featureVector[featureName]))
 
 basePath = 'data/featureExtraction'
 folders = os.listdir(basePath)
