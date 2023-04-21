@@ -2,9 +2,6 @@ import SimpleITK
 import cv2
 import numpy as np
 
-img_path = SimpleITK.ReadImage('data/featureExtraction/brain1/brain1_image.nrrd')
-mask_path = SimpleITK.ReadImage('data/featureExtraction/brain1/brain1_label.nrrd')
-
 
 def read_nrrd(img, mask):
     img_array = SimpleITK.GetArrayFromImage(img)
@@ -21,5 +18,7 @@ def read_nrrd(img, mask):
 
 
 if __name__ == '__main__':
+    img_path = SimpleITK.ReadImage('data/featureExtraction/brain1/brain1_image.nrrd')
+    mask_path = SimpleITK.ReadImage('data/featureExtraction/brain1/brain1_label.nrrd')
     read_nrrd(img_path, mask_path)
     print('Done')
