@@ -1,0 +1,6 @@
+[submodule "FCN/tf2.0-FCN"]
+	path = FCN/tf2.0-FCN
+	url = https://github.com/AlucardNosferatu/tf2.0-FCN.git
+[submodule "Transformer/Learning"]
+	path = Transformer/Learning
+	url = https://github.com/AlucardNosferatu/Learning.git

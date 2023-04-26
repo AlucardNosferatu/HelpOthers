@@ -1,2 +1,2 @@
-# TumorDetection
+# StableDiffusion
 
