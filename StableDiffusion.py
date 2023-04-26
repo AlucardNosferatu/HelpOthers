@@ -36,7 +36,7 @@ def get_models():
     return text_encoder, img_diffuser
 
 
-def timestep_embedding(timesteps, dim=320, max_period=10000):
+def timestep_embedding(timesteps, dim=256, max_period=10000):
     half = dim // 2
     freqs = np.exp(
         -math.log(max_period) * np.arange(0, half, dtype="float32") / half
@@ -131,7 +131,7 @@ def get_prompt_img(
     if noise_image is not None:
         if type(noise_image) is str:
             noise_image = Image.open(noise_image)
-            noise_image = noise_image.resize((model_id.input_shape[1], model_id.input_shape[2]))
+            noise_image = noise_image.resize(size=(model_id.input_shape[0][1], model_id.input_shape[0][2]))
 
         elif type(noise_image) is np.ndarray:
             noise_image = np.resize(
@@ -177,5 +177,15 @@ def get_prompt_img(
 
 if __name__ == '__main__':
     mdl_te, mdl_id = get_models()
-    get_prompt_img(mdl_id, mdl_te, None, '老婆，我去上班了', None, None)
+    get_prompt_img(
+        model_id=mdl_id,
+        model_te=mdl_te,
+        noise_image='FCN/tf2.0-FCN/DL/data/road/test/image_2/um_000000.png',
+        noise_image_strength=0.5,
+        prompt='老婆，我去上班了',
+        seed=None,
+        num_steps=25,
+        noise_guidance_scale=7.5,
+        batch_size=1
+    )
     print('Done')
