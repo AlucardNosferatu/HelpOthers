@@ -1,13 +1,15 @@
 import math
+import os.path
 
 import numpy as np
 import tensorflow as tf
 from PIL import Image
 from tqdm import tqdm
 
-from Constant import _ALPHAS_CUMPROD
-from DL.FCN import full_convolution_net_for_sd
+from Config import num_steps, rgb_channel
+from Constant import ALPHAS_CUMPROD
 from DL.cfg import img_shape
+from Utilities import timestep_tensor, add_noise
 from eval import sent2vec
 from tokenizer import task_conv_chn
 
@@ -20,29 +22,6 @@ def assemble_encoder(transformer_full: tf.keras.Model):
     return tf.keras.Model(inputs=input_layer.input, outputs=enc_outputs)
 
 
-def get_models(transformer_full: tf.keras.Model):
-    text_encoder = assemble_encoder(transformer_full)
-    img_diffuser = full_convolution_net_for_sd(
-        rgb_channel=3,
-        time_step=256,
-        time_encoded_dim=64,
-        io_boundary=19,
-        resb_channel=64,
-        st_heads=8
-    )
-    return text_encoder, img_diffuser
-
-
-def timestep_embedding(timesteps, dim=256, max_period=10000):
-    half = dim // 2
-    freqs = np.exp(
-        -math.log(max_period) * np.arange(0, half, dtype="float32") / half
-    )
-    args = np.array(timesteps) * freqs
-    embedding = np.concatenate([np.cos(args), np.sin(args)])
-    return tf.convert_to_tensor(embedding.reshape(1, -1), dtype=tf.float32)
-
-
 def get_denoise_img(
         model_id,
         batch_size,
@@ -52,9 +31,8 @@ def get_denoise_img(
         empty_context,
         noise_guidance_scale
 ):
-    timestep = np.array([timestep])
-    timestep = timestep_embedding(timestep)
-    timestep = np.repeat(timestep, batch_size, axis=0)
+    timestep = timestep_tensor(batch_size, timestep)
+
     img_without_context = model_id.predict_on_batch(
         [img_with_context, timestep, empty_context]
     )
@@ -66,27 +44,16 @@ def get_denoise_img(
     )
 
 
-def add_noise(x, t, noise=None, rgb_channel=3):
-    batch_size, w, h = x.shape[0], x.shape[1], x.shape[2]
-    if noise is None:
-        noise = tf.random.normal((batch_size, w, h, rgb_channel), dtype=tf.float32)
-    sqrt_alpha_prod = _ALPHAS_CUMPROD[t] ** 0.5
-    sqrt_one_minus_alpha_prod = (1 - _ALPHAS_CUMPROD[t]) ** 0.5
-
-    return sqrt_alpha_prod * x + sqrt_one_minus_alpha_prod * noise
-
-
 def get_initial_params(
         timesteps,
         batch_size,
         seed,
         input_image=None,
-        input_img_noise_t=None,
-        rgb_channel=3
+        input_img_noise_t=None
 ):
     n_h = img_shape[0]
     n_w = img_shape[1]
-    alphas = [_ALPHAS_CUMPROD[t] for t in timesteps]
+    alphas = [ALPHAS_CUMPROD[t] for t in timesteps]
     alphas_prev = [1.0] + alphas[:-1]
     if input_image is None:
         latent = tf.random.normal((batch_size, n_h, n_w, rgb_channel), seed=seed)
@@ -114,7 +81,6 @@ def get_prompt_img(
         noise_image_strength,
         prompt,
         seed,
-        num_steps,
         noise_guidance_scale,
         batch_size=1
 ):
@@ -137,12 +103,18 @@ def get_prompt_img(
             )
 
         input_image_array = np.array(noise_image, dtype=np.uint8)[None, ..., :3]
-        input_image_tensor = tf.cast((input_image_array / 255.0) * 2 - 1, tf.float32)
+        # input_image_tensor = tf.cast((input_image_array / 255.0) * 2 - 1, tf.float32)
+        input_image_tensor = tf.cast(input_image_array / 255.0, tf.float32)
 
-    empty_prompt = ''
-    empty_prompt_vec = sent2vec(end_tok, empty_prompt, start_tok, tok, ' ')
-    empty_prompt_vec = np.repeat(empty_prompt_vec, batch_size, axis=0)
-    empty_context = model_te.predict_on_batch(empty_prompt_vec)
+    ec_path = 'Save/empty_context.npy'
+    if os.path.exists(ec_path):
+        empty_context = np.load(ec_path)
+    else:
+        empty_prompt = ''
+        empty_prompt_vec = sent2vec(end_tok, empty_prompt, start_tok, tok, ' ')
+        empty_prompt_vec = np.repeat(empty_prompt_vec, batch_size, axis=0)
+        empty_context = model_te.predict_on_batch(empty_prompt_vec)
+        np.save(ec_path, empty_context)
 
     timesteps = np.arange(1, 1000, 1000 // num_steps)
     input_img_noise_t = timesteps[int(len(timesteps) * noise_image_strength)]

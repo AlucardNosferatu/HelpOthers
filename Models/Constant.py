@@ -1,4 +1,4 @@
-_ALPHAS_CUMPROD = [
+ALPHAS_CUMPROD = [
     0.99915,
     0.998296,
     0.9974381,
