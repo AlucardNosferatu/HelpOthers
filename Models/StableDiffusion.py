@@ -46,7 +46,7 @@ def timestep_embedding(timesteps, dim=256, max_period=10000):
 def get_denoise_img(
         model_id,
         batch_size,
-        noise_image,
+        img_with_context,
         timestep,
         context,
         empty_context,
@@ -55,14 +55,14 @@ def get_denoise_img(
     timestep = np.array([timestep])
     timestep = timestep_embedding(timestep)
     timestep = np.repeat(timestep, batch_size, axis=0)
-    denoise_image = model_id.predict_on_batch(
-        [noise_image, timestep, empty_context]
+    img_without_context = model_id.predict_on_batch(
+        [img_with_context, timestep, empty_context]
     )
-    noise_image = model_id.predict_on_batch(
-        [noise_image, timestep, context]
+    img_with_context = model_id.predict_on_batch(
+        [img_with_context, timestep, context]
     )
-    return denoise_image + noise_guidance_scale * (
-            noise_image - denoise_image
+    return img_without_context + noise_guidance_scale * (
+            img_with_context - img_without_context
     )
 
 
@@ -136,7 +136,7 @@ def get_prompt_img(
                 (model_id.input_shape[1], model_id.input_shape[2], model_id.input_shape[3])
             )
 
-        input_image_array = np.array(noise_image, dtype=np.float32)[None, ..., :3]
+        input_image_array = np.array(noise_image, dtype=np.uint8)[None, ..., :3]
         input_image_tensor = tf.cast((input_image_array / 255.0) * 2 - 1, tf.float32)
 
     empty_prompt = ''
@@ -159,7 +159,7 @@ def get_prompt_img(
         e_t = get_denoise_img(
             model_id=model_id,
             batch_size=batch_size,
-            noise_image=latent,
+            img_with_context=latent,
             timestep=timestep,
             context=context,
             empty_context=empty_context,
