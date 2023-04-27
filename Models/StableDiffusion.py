@@ -7,22 +7,17 @@ from tqdm import tqdm
 
 from DL.FCN import full_convolution_net_for_sd
 from DL.cfg import img_shape
-from Model.Transformer import transformer_encoder_only
-from config import TGT_VOC_SIZE, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP, MAX_SL
+from Model.Transformer import transformer_encoder_only, transformer
+from config import TGT_VOC_SIZE, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP, MAX_SL, WGT_PATH
 from eval import sent2vec
 from tokenizer import task_conv_chn
 from Constant import _ALPHAS_CUMPROD
 
 
-def get_models():
+def get_models(transformer_full):
     text_encoder = transformer_encoder_only(
         seq_length=MAX_SL,
-        vocab_size=TGT_VOC_SIZE,
-        num_layers=N_LAYERS,
-        units=UNITS,
-        word_vec_dim=WORD_VEC_DIM,
-        num_heads=N_HEADS,
-        dropout=DROP
+        transformer_encoder=transformer_full.get_layer(name='encoder')
     )
 
     img_diffuser = full_convolution_net_for_sd(
@@ -176,7 +171,17 @@ def get_prompt_img(
 
 
 if __name__ == '__main__':
-    mdl_te, mdl_id = get_models()
+    t_full = transformer(
+        vocab_size=TGT_VOC_SIZE,
+        num_layers=N_LAYERS,
+        units=UNITS,
+        word_vec_dim=WORD_VEC_DIM,
+        num_heads=N_HEADS,
+        dropout=DROP,
+        name="transformer"
+    )
+    t_full.load_weights(WGT_PATH)
+    mdl_te, mdl_id = get_models(t_full)
     get_prompt_img(
         model_id=mdl_id,
         model_te=mdl_te,
