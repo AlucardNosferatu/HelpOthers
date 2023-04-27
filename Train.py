@@ -153,21 +153,23 @@ def train_img_diffuser():
 
 
 if __name__ == '__main__':
-    train_img_diffuser()
+    # train_img_diffuser()
     mdl_id = get_img_diffuser()
 
-    train_text_encoder()
+    # train_text_encoder()
     mdl_te = get_text_encoder()
 
-    get_prompt_img(
+    result = get_prompt_img(
         model_id=mdl_id,
         model_te=mdl_te,
-        noise_image='Data/Image/2.JPEG',
-        noise_image_strength=0.5,
+        noise_image='Data/Image/8.JPEG',
+        noise_image_strength=0.1,
         prompt='barding black cape celty_sturluson dress dullahan durarara!! headless highres horse horseback_riding '
                'janemere smoke solo',
         seed=None,
         noise_guidance_scale=7.5,
         batch_size=1
     )
+    cv2.imshow('res', np.array(result)[0, :, :, :])
+    cv2.waitKey()
     print('Done')
