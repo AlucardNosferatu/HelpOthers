@@ -5,21 +5,23 @@ import tensorflow as tf
 from PIL import Image
 from tqdm import tqdm
 
+from Constant import _ALPHAS_CUMPROD
 from DL.FCN import full_convolution_net_for_sd
 from DL.cfg import img_shape
-from Model.Transformer import transformer_encoder_only, transformer
-from config import TGT_VOC_SIZE, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP, MAX_SL, WGT_PATH
 from eval import sent2vec
 from tokenizer import task_conv_chn
-from Constant import _ALPHAS_CUMPROD
 
 
-def get_models(transformer_full):
-    text_encoder = transformer_encoder_only(
-        seq_length=MAX_SL,
-        transformer_encoder=transformer_full.get_layer(name='encoder')
-    )
+def assemble_encoder(transformer_full: tf.keras.Model):
+    input_layer = transformer_full.get_layer(name='inputs')
+    input_tensor = input_layer.output
+    enc_padding_mask = transformer_full.get_layer(name='enc_padding_mask')(input_tensor)
+    enc_outputs = transformer_full.get_layer(name='encoder')(inputs=[input_tensor, enc_padding_mask])
+    return tf.keras.Model(inputs=input_layer.input, outputs=enc_outputs)
 
+
+def get_models(transformer_full: tf.keras.Model):
+    text_encoder = assemble_encoder(transformer_full)
     img_diffuser = full_convolution_net_for_sd(
         rgb_channel=3,
         time_step=256,
@@ -118,7 +120,7 @@ def get_prompt_img(
 ):
     tok, vocab_size = task_conv_chn(None, None, False, False)
     start_tok, end_tok = [vocab_size], [vocab_size + 1]
-    prompt_vec = sent2vec(end_tok, prompt, start_tok, tok)
+    prompt_vec = sent2vec(end_tok, prompt, start_tok, tok, ' ')
     prompt_vec = np.repeat(prompt_vec, batch_size, axis=0)
     context = model_te.predict_on_batch(prompt_vec)
 
@@ -138,7 +140,7 @@ def get_prompt_img(
         input_image_tensor = tf.cast((input_image_array / 255.0) * 2 - 1, tf.float32)
 
     empty_prompt = ''
-    empty_prompt_vec = sent2vec(end_tok, empty_prompt, start_tok, tok)
+    empty_prompt_vec = sent2vec(end_tok, empty_prompt, start_tok, tok, ' ')
     empty_prompt_vec = np.repeat(empty_prompt_vec, batch_size, axis=0)
     empty_context = model_te.predict_on_batch(empty_prompt_vec)
 
@@ -171,26 +173,4 @@ def get_prompt_img(
 
 
 if __name__ == '__main__':
-    t_full = transformer(
-        vocab_size=TGT_VOC_SIZE,
-        num_layers=N_LAYERS,
-        units=UNITS,
-        word_vec_dim=WORD_VEC_DIM,
-        num_heads=N_HEADS,
-        dropout=DROP,
-        name="transformer"
-    )
-    t_full.load_weights(WGT_PATH)
-    mdl_te, mdl_id = get_models(t_full)
-    get_prompt_img(
-        model_id=mdl_id,
-        model_te=mdl_te,
-        noise_image='FCN/tf2.0-FCN/DL/data/road/test/image_2/um_000000.png',
-        noise_image_strength=0.5,
-        prompt='老婆，我去上班了',
-        seed=None,
-        num_steps=25,
-        noise_guidance_scale=7.5,
-        batch_size=1
-    )
-    print('Done')
+    pass
