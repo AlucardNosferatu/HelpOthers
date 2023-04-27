@@ -74,5 +74,5 @@ if __name__ == '__main__':
     # save_prompt_to_txt('Data/Prompt.txt', i, o, ids)
     # i, o, ids = load_prompt_from_txt('Data/Prompt.txt')
     tok, v_size = task_conv_chn(None, None, False, False)
-    
+
 
