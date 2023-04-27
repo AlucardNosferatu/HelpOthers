@@ -7,34 +7,38 @@ from PIL import Image
 from urllib3.packages.six import BytesIO
 
 
-def load_prompt_from_csv(prompt_csv_filepath, download_image=True, load_length=1000):
+def load_prompt_from_csv(prompt_csv_filepath, skip_download=0, download_image=True, load_length=1000):
     print('Current file:', prompt_csv_filepath)
     data_csv = pd.read_csv(prompt_csv_filepath)
     inputs, outputs = [], []
     id_list = []
     for index, row in data_csv.iterrows():
-        img_id = str(row['id'])
-        has_jpg = os.path.exists(os.path.join('Data/Image', img_id + '.JPEG'))
-        has_png = os.path.exists(os.path.join('Data/Image', img_id + '.PNG'))
+        img_id = row['id']
+        img_id_str = str(img_id)
+        has_jpg = os.path.exists(os.path.join('Data/Image', img_id_str + '.JPEG'))
+        has_png = os.path.exists(os.path.join('Data/Image', img_id_str + '.PNG'))
         if not has_png and not has_jpg:
             if download_image:
-                img_url = 'http:' + row['sample_url']
-                response = requests.get(img_url)
-                if response.status_code != 200:
+                if img_id > skip_download:
+                    img_url = 'http:' + row['sample_url']
+                    response = requests.get(img_url)
+                    if response.status_code != 200:
+                        continue
+                    content = response.content
+                    bytes_io_obj = BytesIO()
+                    bytes_io_obj.write(content)
+                    img_pil = Image.open(bytes_io_obj)
+                    if img_pil.format not in ['JPEG', 'PNG']:
+                        continue
+                    img_pil.save(open(os.path.join('Data/Image', img_id_str + '.' + img_pil.format), 'wb'))
+                else:
                     continue
-                content = response.content
-                bytes_io_obj = BytesIO()
-                bytes_io_obj.write(content)
-                img_pil = Image.open(bytes_io_obj)
-                if img_pil.format not in ['JPEG', 'PNG']:
-                    continue
-                img_pil.save(open(os.path.join('Data/Image', img_id + '.' + img_pil.format), 'wb'))
             else:
                 continue
         tags = row['tags']
         inputs.append(tags.split(' '))
         outputs.append(tags.split(' '))
-        id_list.append(img_id)
+        id_list.append(img_id_str)
         if len(id_list) % 10 == 0:
             print(len(id_list))
         if len(id_list) > load_length:
@@ -56,5 +60,5 @@ def load_prompt_from_txt(prompt_txt_filepath):
 
 
 if __name__ == '__main__':
-    i, o, ids = load_prompt_from_csv('Data/all_data.csv', download_image=False)
+    i, o, ids = load_prompt_from_csv('Data/all_data.csv', skip_download=1145, download_image=True)
     save_prompt_to_txt('Data/Prompt.txt', i, o, ids)
