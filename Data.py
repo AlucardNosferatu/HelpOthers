@@ -6,6 +6,8 @@ from PIL import Image
 # noinspection PyUnresolvedReferences
 from urllib3.packages.six import BytesIO
 
+from tokenizer import task_conv_chn
+
 
 def load_prompt_from_csv(prompt_csv_filepath, skip_download=0, download_image=True, load_length=1000):
     print('Current file:', prompt_csv_filepath)
@@ -41,7 +43,7 @@ def load_prompt_from_csv(prompt_csv_filepath, skip_download=0, download_image=Tr
         id_list.append(img_id_str)
         if len(id_list) % 10 == 0:
             print(len(id_list))
-        if len(id_list) > load_length:
+        if len(id_list) >= load_length:
             break
     return inputs, outputs, id_list
 
@@ -56,9 +58,21 @@ def save_prompt_to_txt(prompt_txt_filepath, inputs, outputs, id_list):
 
 
 def load_prompt_from_txt(prompt_txt_filepath):
-    pass
+    with open(prompt_txt_filepath, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    id_list, inputs, outputs = [], [], []
+    for line in lines:
+        line = line.strip('\n').split('\t\t\t')
+        id_list.append(line[0])
+        inputs.append(line[1].split(' '))
+        outputs.append(line[2].split(' '))
+    return inputs, outputs, id_list
 
 
 if __name__ == '__main__':
-    i, o, ids = load_prompt_from_csv('Data/all_data.csv', skip_download=1145, download_image=True)
-    save_prompt_to_txt('Data/Prompt.txt', i, o, ids)
+    # i, o, ids = load_prompt_from_csv('Data/all_data.csv', skip_download=1341, download_image=True, load_length=1000)
+    # save_prompt_to_txt('Data/Prompt.txt', i, o, ids)
+    # i, o, ids = load_prompt_from_txt('Data/Prompt.txt')
+    tok, v_size = task_conv_chn(None, None, False, False)
+    
+
