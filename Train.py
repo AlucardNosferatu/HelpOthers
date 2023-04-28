@@ -5,11 +5,11 @@ import numpy as np
 import tensorflow as tf
 
 from Config import num_steps, rgb_channel
-from DL.FCN import full_convolution_net_for_sd
+from StableDiffusion import full_convolution_net_for_sd
 from DL.cfg import num_epochs, weight_path, weight_name, learning_rate
 from Data import load_prompt_from_txt, generator_train
 from Model.Transformer import transformer
-from Models.StableDiffusion import get_prompt_img, assemble_encoder
+from Models.StableDiffusion import get_prompt_img, transformer_encoder
 from config import SET_BS, WGT_PATH, EPOCHS, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP
 from tokenizer import do_tokenize, task_conv_chn
 from train import prepare_model
@@ -32,7 +32,7 @@ def get_text_encoder():
         name="transformer"
     )
     t_full.load_weights(WGT_PATH)
-    text_encoder = assemble_encoder(t_full)
+    text_encoder = transformer_encoder(t_full)
     return text_encoder
 
 

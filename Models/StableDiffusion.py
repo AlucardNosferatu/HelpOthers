@@ -8,18 +8,66 @@ from tqdm import tqdm
 
 from Config import num_steps, rgb_channel
 from Constant import ALPHAS_CUMPROD
+from DL.FCN import full_convolution_net
 from DL.cfg import img_shape
+from SpatialTransformer import ResBlock, SpatialTransformer, apply_seq
 from Utilities import timestep_tensor, add_noise
+from config import MAX_SL, WORD_VEC_DIM
 from eval import sent2vec
 from tokenizer import task_conv_chn
 
 
-def assemble_encoder(transformer_full: tf.keras.Model):
+def transformer_encoder(transformer_full: tf.keras.Model):
     input_layer = transformer_full.get_layer(name='inputs')
     input_tensor = input_layer.output
     enc_padding_mask = transformer_full.get_layer(name='enc_padding_mask')(input_tensor)
     enc_outputs = transformer_full.get_layer(name='encoder')(inputs=[input_tensor, enc_padding_mask])
     return tf.keras.Model(inputs=input_layer.input, outputs=enc_outputs)
+
+
+def full_convolution_net_for_sd(
+        time_step=256,
+        time_encoded_dim=64,
+        io_boundary=19,
+        resb_channel=64,
+        st_heads=8
+):
+    def apply(x_, layer_, emb_=None, context_=None):
+        if isinstance(layer_, ResBlock):
+            x_ = layer_([x_, emb_])
+        elif isinstance(layer_, SpatialTransformer):
+            x_ = layer_([x_, context_])
+        else:
+            x_ = layer_(x_)
+        return x_
+
+    fcn = full_convolution_net(rgb_channel)
+
+    t_emb = tf.keras.Input((time_step,))
+    time_embed = [
+        tf.keras.layers.Dense(time_encoded_dim),
+        tf.keras.activations.swish,
+        tf.keras.layers.Dense(time_encoded_dim),
+    ]
+    emb = apply_seq(t_emb, time_embed)
+
+    context = tf.keras.layers.Input((MAX_SL, WORD_VEC_DIM))
+
+    x = fcn.layers[io_boundary - 1].output
+
+    middle_block = [
+        ResBlock(resb_channel, WORD_VEC_DIM * st_heads),
+        SpatialTransformer(WORD_VEC_DIM * st_heads, st_heads, WORD_VEC_DIM),
+        ResBlock(WORD_VEC_DIM * st_heads, fcn.layers[io_boundary].input_shape[-1])
+    ]
+    for layer in middle_block:
+        x = apply(x, layer, emb, context)
+
+    output_block = fcn.layers[io_boundary:]
+    for layer in output_block:
+        x = apply(x, layer, emb, context)
+    new_model = tf.keras.Model(inputs=[fcn.input, t_emb, context], outputs=x)
+    return new_model
 
 
 def get_denoise_img(
