@@ -110,7 +110,7 @@ def train_img_diffuser(debug=False):
 
 
 if __name__ == '__main__':
-    train_img_diffuser(debug=True)
+    train_img_diffuser(debug=False)
     mdl_id = get_img_diffuser()
 
     # train_text_encoder()
