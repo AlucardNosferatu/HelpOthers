@@ -10,6 +10,7 @@ from Config import num_steps, rgb_channel
 from Constant import ALPHAS_CUMPROD
 from DL.FCN import full_convolution_net
 from DL.cfg import img_shape
+from ExtraOutputLayers import build_output_block
 from SpatialTransformer import ResBlock, SpatialTransformer, apply_seq
 from Utilities import timestep_tensor, add_noise
 from config import MAX_SL, WORD_VEC_DIM
@@ -63,9 +64,11 @@ def full_convolution_net_for_sd(
     for layer in middle_block:
         x = apply(x, layer, emb, context)
 
-    output_block = fcn.layers[io_boundary:]
-    for layer in output_block:
-        x = apply(x, layer, emb, context)
+    # output_block = fcn.layers[io_boundary:]
+    # for layer in output_block:
+    #     x = apply(x, layer, emb, context)
+    output_block = build_output_block()
+    x = output_block(x)
     new_model = tf.keras.Model(inputs=[fcn.input, t_emb, context], outputs=x)
     return new_model
 
@@ -193,4 +196,4 @@ def get_prompt_img(
 
 
 if __name__ == '__main__':
-    pass
+    full_convolution_net_for_sd()
