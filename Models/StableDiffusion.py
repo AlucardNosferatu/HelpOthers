@@ -27,7 +27,6 @@ def transformer_encoder(transformer_full: tf.keras.Model):
 
 
 def full_convolution_net_for_sd(
-        time_step=256,
         time_encoded_dim=64,
         io_boundary=19,
         resb_channel=64,
@@ -44,7 +43,7 @@ def full_convolution_net_for_sd(
 
     fcn = full_convolution_net(rgb_channel)
 
-    t_emb = tf.keras.Input((time_step,))
+    t_emb = tf.keras.Input((num_steps,))
     time_embed = [
         tf.keras.layers.Dense(time_encoded_dim),
         tf.keras.activations.swish,

@@ -4,12 +4,11 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-from Config import num_steps, rgb_channel
-from StableDiffusion import full_convolution_net_for_sd
 from DL.cfg import num_epochs, weight_path, weight_name, learning_rate
 from Data import load_prompt_from_txt, generator_train
 from Model.Transformer import transformer
 from Models.StableDiffusion import get_prompt_img, transformer_encoder
+from StableDiffusion import full_convolution_net_for_sd
 from config import SET_BS, WGT_PATH, EPOCHS, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP
 from tokenizer import do_tokenize, task_conv_chn
 from train import prepare_model
@@ -62,8 +61,6 @@ def train_text_encoder(new_tokenizer=False):
 
 def get_img_diffuser():
     img_diffuser = full_convolution_net_for_sd(
-        rgb_channel=rgb_channel,
-        time_step=num_steps,
         time_encoded_dim=64,
         io_boundary=19,
         resb_channel=64,
@@ -76,8 +73,6 @@ def get_img_diffuser():
 
 def train_img_diffuser():
     img_diffuser = full_convolution_net_for_sd(
-        rgb_channel=rgb_channel,
-        time_step=num_steps,
         time_encoded_dim=64,
         io_boundary=19,
         resb_channel=64,
