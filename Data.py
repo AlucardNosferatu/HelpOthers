@@ -24,8 +24,8 @@ def load_prompt_from_csv(prompt_csv_filepath, skip_download=0, download_image=Tr
     for index, row in data_csv.iterrows():
         img_id = row['id']
         img_id_str = str(img_id)
-        has_jpg = os.path.exists(os.path.join('Data/Image', img_id_str + '.JPEG'))
-        has_png = os.path.exists(os.path.join('Data/Image', img_id_str + '.PNG'))
+        has_jpg = os.path.exists(os.path.join('Data_SD/Image', img_id_str + '.JPEG'))
+        has_png = os.path.exists(os.path.join('Data_SD/Image', img_id_str + '.PNG'))
         if not has_png and not has_jpg:
             if download_image:
                 if img_id > skip_download:
@@ -39,7 +39,7 @@ def load_prompt_from_csv(prompt_csv_filepath, skip_download=0, download_image=Tr
                     img_pil = Image.open(bytes_io_obj)
                     if img_pil.format not in ['JPEG', 'PNG']:
                         continue
-                    img_pil.save(open(os.path.join('Data/Image', img_id_str + '.' + img_pil.format), 'wb'))
+                    img_pil.save(open(os.path.join('Data_SD/Image', img_id_str + '.' + img_pil.format), 'wb'))
                 else:
                     continue
             else:
@@ -76,7 +76,7 @@ def load_prompt_from_txt(prompt_txt_filepath):
     return inputs, outputs, id_list
 
 
-def load_image_from_files(img_dir='Data/Image', empty_ctx_path='Save/empty_context.npy'):
+def load_image_from_files(img_dir='Data_TF/Image', empty_ctx_path='Save_TF/empty_context.npy'):
     context = np.squeeze(np.load(empty_ctx_path))
     img_files = os.listdir(img_dir)
     ids = [file.split('.')[0] for file in img_files]
@@ -107,8 +107,8 @@ def load_image_from_files(img_dir='Data/Image', empty_ctx_path='Save/empty_conte
 
         if len(y) >= batch_size:
             input_pkl = [np.array(x_wn), np.array(x_tt), np.array(x_ct)]
-            pickle.dump(input_pkl, open(os.path.join('Data/Array/Input', ids[i] + '.pkl'), 'wb'))
-            np.save(os.path.join('Data/Array/Output', ids[i] + '.npy'), np.array(y))
+            pickle.dump(input_pkl, open(os.path.join('Data_SD/Array/Input', ids[i] + '.pkl'), 'wb'))
+            np.save(os.path.join('Data_SD/Array/Output', ids[i] + '.npy'), np.array(y))
             x_wn.clear()
             x_tt.clear()
             x_ct.clear()
@@ -116,7 +116,7 @@ def load_image_from_files(img_dir='Data/Image', empty_ctx_path='Save/empty_conte
 
 
 def read_ids():
-    ids = os.listdir('Data/Array/Input')
+    ids = os.listdir('Data_SD/Array/Input')
     ids = [id_.split('.')[0] for id_ in ids]
     return ids
 
@@ -125,17 +125,17 @@ def generator_train():
     ids_ = read_ids()
     while True:
         id_ = random.choice(ids_)
-        filepath = os.path.join('Data/Array/Input', id_ + '.pkl')
+        filepath = os.path.join('Data_SD/Array/Input', id_ + '.pkl')
         input_list = pickle.load(open(filepath, 'rb'))
-        filepath = os.path.join('Data/Array/Output', id_ + '.npy')
+        filepath = os.path.join('Data_SD/Array/Output', id_ + '.npy')
         output_array = np.load(filepath)
         yield input_list, output_array
 
 
 if __name__ == '__main__':
-    # i, o, ids = load_prompt_from_csv('Data/all_data.csv', skip_download=1341, download_image=True, load_length=1000)
-    # save_prompt_to_txt('Data/Prompt.txt', i, o, ids)
-    # i, o, ids = load_prompt_from_txt('Data/Prompt.txt')
+    # i, o, ids = load_prompt_from_csv('Data_TF/all_data.csv', skip_download=1341, download_image=True, load_length=1000)
+    # save_prompt_to_txt('Data_TF/Prompt.txt', i, o, ids)
+    # i, o, ids = load_prompt_from_txt('Data_TF/Prompt.txt')
     # tok, v_size = task_conv_chn(None, None, False, False)
     # load_image_from_files()
     g_in = generator_train()

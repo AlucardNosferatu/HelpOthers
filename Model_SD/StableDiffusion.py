@@ -7,7 +7,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from Config import num_steps, rgb_channel
-from Constant import ALPHAS_CUMPROD
+from Model_SD.Constant import ALPHAS_CUMPROD
 from DL.FCN import full_convolution_net
 from DL.cfg import img_shape
 from ExtraOutputLayers import build_output_block
@@ -156,7 +156,7 @@ def get_prompt_img(
         # input_image_tensor = tf.cast((input_image_array / 255.0) * 2 - 1, tf.float32)
         input_image_tensor = tf.cast(input_image_array / 255.0, tf.float32)
 
-    ec_path = 'Save/empty_context.npy'
+    ec_path = 'Save_TF/empty_context.npy'
     if os.path.exists(ec_path):
         empty_context = np.load(ec_path)
     else:

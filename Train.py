@@ -6,8 +6,8 @@ import tensorflow as tf
 
 from DL.cfg import num_epochs, weight_path, weight_name, learning_rate
 from Data import load_prompt_from_txt, generator_train
-from Model.Transformer import transformer
-from Models.StableDiffusion import get_prompt_img, transformer_encoder
+from Model_TF.Transformer import transformer
+from Model_SD.StableDiffusion import get_prompt_img, transformer_encoder
 from StableDiffusion import full_convolution_net_for_sd
 from config import SET_BS, WGT_PATH, EPOCHS, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP
 from tokenizer import do_tokenize, task_conv_chn
@@ -36,7 +36,7 @@ def get_text_encoder():
 
 
 def train_text_encoder(new_tokenizer=False):
-    i, o, ids = load_prompt_from_txt('Data/Prompt.txt')
+    i, o, ids = load_prompt_from_txt('Data_SD/Prompt.txt')
     dataset, vocab_size = do_tokenize(i, o, task_conv_chn, new_tokenizer)
     dataset = dataset.batch(SET_BS)
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     result = get_prompt_img(
         model_id=mdl_id,
         model_te=mdl_te,
-        noise_image='Data/Image/8.JPEG',
+        noise_image='Data_TF/Image/8.JPEG',
         noise_image_strength=0.1,
         prompt='barding black cape celty_sturluson dress dullahan durarara!! headless highres horse horseback_riding '
                'janemere smoke solo',
