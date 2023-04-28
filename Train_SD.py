@@ -70,7 +70,7 @@ def get_img_diffuser():
     return img_diffuser
 
 
-def train_img_diffuser():
+def train_img_diffuser(debug=False):
     img_diffuser = full_convolution_net_for_sd(
         time_encoded_dim=64,
         io_boundary=19,
@@ -81,7 +81,7 @@ def train_img_diffuser():
         img_diffuser.load_weights(os.path.join(weight_path, weight_name + '.ckpt'))
     optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate, decay=0.00001)
     img_diffuser.compile(
-        run_eagerly=True,
+        run_eagerly=debug,
         optimizer=optimizer,
         loss=[
             loss_fn
@@ -110,7 +110,7 @@ def train_img_diffuser():
 
 
 if __name__ == '__main__':
-    train_img_diffuser()
+    train_img_diffuser(debug=True)
     mdl_id = get_img_diffuser()
 
     # train_text_encoder()
