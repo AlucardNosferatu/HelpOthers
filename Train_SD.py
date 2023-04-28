@@ -4,14 +4,14 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-from DL.cfg import num_epochs, weight_path, weight_name, learning_rate
-from Data import load_prompt_from_txt, generator_train
+from DL.Config_FCN import num_epochs, weight_path, weight_name, learning_rate
+from Load_SD import load_prompt_from_txt, generator_train
 from Model_TF.Transformer import transformer
 from Model_SD.StableDiffusion import get_prompt_img, transformer_encoder
 from StableDiffusion import full_convolution_net_for_sd
-from config import SET_BS, WGT_PATH, EPOCHS, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP
-from tokenizer import do_tokenize, task_conv_chn
-from train import prepare_model
+from Config_TF import SET_BS, WGT_PATH, EPOCHS, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP
+from Tokenizer import do_tokenize, task_conv_chn
+from Train_TF import prepare_model
 
 
 def loss_fn(y_true, y_pred):

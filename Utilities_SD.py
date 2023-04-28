@@ -3,7 +3,7 @@ import math
 import numpy as np
 import tensorflow as tf
 
-from Config import num_steps
+from Config_SD import num_steps
 from Constant import ALPHAS_CUMPROD
 
 

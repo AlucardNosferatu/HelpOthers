@@ -6,16 +6,16 @@ import tensorflow as tf
 from PIL import Image
 from tqdm import tqdm
 
-from Config import num_steps, rgb_channel
+from Config_SD import num_steps, rgb_channel
 from Model_SD.Constant import ALPHAS_CUMPROD
 from DL.FCN import full_convolution_net
-from DL.cfg import img_shape
-from ExtraOutputLayers import build_output_block
-from SpatialTransformer import ResBlock, SpatialTransformer, apply_seq
-from Utilities import timestep_tensor, add_noise
-from config import MAX_SL, WORD_VEC_DIM
-from eval import sent2vec
-from tokenizer import task_conv_chn
+from DL.Config_FCN import img_shape
+from Model_SD.ExtraOutputLayers import build_output_block
+from Model_SD.SpatialTransformer import ResBlock, SpatialTransformer, apply_seq
+from Utilities_SD import timestep_tensor, add_noise
+from Config_TF import MAX_SL, WORD_VEC_DIM
+from Test_TF import sent2vec
+from Tokenizer import task_conv_chn
 
 
 def transformer_encoder(transformer_full: tf.keras.Model):

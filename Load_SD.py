@@ -11,9 +11,9 @@ from tqdm import tqdm
 # noinspection PyUnresolvedReferences
 from urllib3.packages.six import BytesIO
 
-from Config import num_steps, rgb_channel
-from DL.cfg import img_shape, batch_size
-from Utilities import timestep_tensor, add_noise
+from Config_SD import num_steps, rgb_channel
+from DL.Config_FCN import img_shape, batch_size
+from Utilities_SD import timestep_tensor, add_noise
 
 
 def load_prompt_from_csv(prompt_csv_filepath, skip_download=0, download_image=True, load_length=1000):

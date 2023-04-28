@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from DL.cfg import img_shape
+from DL.Config_FCN import img_shape
 
 
 # input.shape = (None, img_shape[0] / 32, img_shape[1] / 32, 512)
@@ -26,19 +26,19 @@ def build_output_block():
     x = conv2dt_3(x)
     bn_3 = tf.keras.layers.BatchNormalization()
     x = bn_3(x)
-    conv2dt_4 = tf.keras.layers.Conv2DTranspose(filters=32, kernel_size=(4, 4), strides=(2, 2), padding='same')
+    conv2dt_4 = tf.keras.layers.Conv2DTranspose(filters=32, kernel_size=(8, 8), strides=(2, 2), padding='same')
     lrelu_4 = tf.keras.layers.LeakyReLU()
     x = lrelu_4(x)
     x = conv2dt_4(x)
     bn_4 = tf.keras.layers.BatchNormalization()
     x = bn_4(x)
-    conv2dt_5 = tf.keras.layers.Conv2DTranspose(filters=16, kernel_size=(4, 4), strides=(2, 2), padding='same')
+    conv2dt_5 = tf.keras.layers.Conv2DTranspose(filters=16, kernel_size=(8, 8), strides=(2, 2), padding='same')
     lrelu_5 = tf.keras.layers.LeakyReLU()
     x = lrelu_5(x)
     x = conv2dt_5(x)
     bn_5 = tf.keras.layers.BatchNormalization()
     x = bn_5(x)
-    conv2dt_6 = tf.keras.layers.Conv2DTranspose(filters=3, kernel_size=(2, 2), strides=(1, 1), padding='same',
+    conv2dt_6 = tf.keras.layers.Conv2DTranspose(filters=3, kernel_size=(16, 16), strides=(1, 1), padding='same',
                                                 activation=tf.keras.activations.sigmoid)
     x = conv2dt_6(x)
     new_model = tf.keras.Model(inputs=input_tensor, outputs=x)
