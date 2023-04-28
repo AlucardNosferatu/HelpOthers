@@ -111,11 +111,6 @@ def train_img_diffuser():
 
 
 if __name__ == '__main__':
-    # y_true = np.load('y.npy')
-    # y_pred = np.load('y_pred.npy')
-    # loss_pred = loss_fn(y_true, y_pred)
-    # loss_true = np.load('loss.npy')
-
     train_img_diffuser()
     mdl_id = get_img_diffuser()
 
