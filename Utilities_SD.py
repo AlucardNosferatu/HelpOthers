@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from Config_SD import num_steps
-from Constant import ALPHAS_CUMPROD
+from Model_SD.Constant import ALPHAS_CUMPROD
 
 
 def timestep_tensor(batch_size, timestep):

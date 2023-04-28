@@ -121,19 +121,26 @@ def read_ids():
     return ids
 
 
-def generator_train():
+def generator_train(random_yield=False):
     ids_ = read_ids()
     while True:
-        id_ = random.choice(ids_)
-        filepath = os.path.join('Data_SD/Array/Input', id_ + '.pkl')
-        input_list = pickle.load(open(filepath, 'rb'))
-        filepath = os.path.join('Data_SD/Array/Output', id_ + '.npy')
-        output_array = np.load(filepath)
-        yield input_list, output_array
+        for id_ in ids_:
+            if random_yield:
+                id_ = random.choice(ids_)
+            filepath = os.path.join('Data_SD/Array/Input', id_ + '.pkl')
+            input_list = pickle.load(open(filepath, 'rb'))
+            filepath = os.path.join('Data_SD/Array/Output', id_ + '.npy')
+            output_array = np.load(filepath)
+            yield input_list, output_array
 
 
 if __name__ == '__main__':
-    # i, o, ids = load_prompt_from_csv('Data_TF/all_data.csv', skip_download=1341, download_image=True, load_length=1000)
+    # i, o, ids = load_prompt_from_csv(
+    #     'Data_TF/all_data.csv',
+    #     skip_download=1341,
+    #     download_image=True,
+    #     load_length=1000
+    # )
     # save_prompt_to_txt('Data_TF/Prompt.txt', i, o, ids)
     # i, o, ids = load_prompt_from_txt('Data_TF/Prompt.txt')
     # tok, v_size = task_conv_chn(None, None, False, False)
