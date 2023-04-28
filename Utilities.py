@@ -33,7 +33,6 @@ def add_noise(x, t, noise=None, rgb_channel=3):
         max_n = np.max(np.array(noise))
         noise = noise / max_n
         noise = noise - 0.5
-        noise = noise / 4
     sqrt_alpha_prod = ALPHAS_CUMPROD[t] ** 0.5
     sqrt_one_minus_alpha_prod = (1 - ALPHAS_CUMPROD[t]) ** 0.5
     res = sqrt_alpha_prod * x + sqrt_one_minus_alpha_prod * noise

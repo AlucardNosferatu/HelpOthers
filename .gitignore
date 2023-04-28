@@ -4,4 +4,6 @@
 *.JPEG
 *.PNG
 *.txt
+*.pkl
+*.npy
 DL/weights/

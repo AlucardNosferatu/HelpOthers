@@ -1,18 +1,15 @@
 import os
-import random
 
 import cv2
 import numpy as np
 import tensorflow as tf
-from tqdm import tqdm
 
 from Config import num_steps, rgb_channel
 from DL.FCN import full_convolution_net_for_sd
-from DL.cfg import img_shape, num_epochs, weight_path, weight_name, learning_rate, batch_size
-from Data import load_prompt_from_txt
+from DL.cfg import num_epochs, weight_path, weight_name, learning_rate
+from Data import load_prompt_from_txt, generator_train
 from Model.Transformer import transformer
 from Models.StableDiffusion import get_prompt_img, assemble_encoder
-from Utilities import timestep_tensor, add_noise
 from config import SET_BS, WGT_PATH, EPOCHS, N_LAYERS, UNITS, WORD_VEC_DIM, N_HEADS, DROP
 from tokenizer import do_tokenize, task_conv_chn
 from train import prepare_model
@@ -78,39 +75,6 @@ def get_img_diffuser():
 
 
 def train_img_diffuser():
-    def datasets_id():
-        context = np.squeeze(np.load('Save/empty_context.npy'))
-        img_dir = 'Data/Image'
-        img_files = os.listdir(img_dir)
-        img_files = [os.path.join(img_dir, file) for file in img_files]
-        timesteps = np.arange(1, 1000, 1000 // num_steps)
-        x_wn = []
-        x_tt = []
-        x_ct = []
-        y = []
-        for img_file in tqdm(img_files):
-            image = cv2.resize(cv2.imread(img_file), img_shape)
-            image_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
-            image_yuv[:, :, 0] = cv2.equalizeHist(image_yuv[:, :, 0])
-            image = np.array(cv2.cvtColor(image_yuv, cv2.COLOR_YUV2RGB))
-            image = image.astype('float32') / 255.0
-
-            timestep = random.choice(timesteps)
-            ts_tensor = np.squeeze(timestep_tensor(1, timestep))
-
-            with_noise = np.squeeze(
-                add_noise(np.reshape(image, (1, img_shape[0], img_shape[1], rgb_channel)), timestep))
-
-            x_wn.append(with_noise)
-            x_tt.append(ts_tensor)
-            x_ct.append(context)
-            y.append(image)
-        x_wn = np.array(x_wn)
-        x_tt = np.array(x_tt)
-        x_ct = np.array(x_ct)
-        y = np.array(y)
-        return x_wn, x_tt, x_ct, y
-
     img_diffuser = full_convolution_net_for_sd(
         rgb_channel=rgb_channel,
         time_step=num_steps,
@@ -123,7 +87,7 @@ def train_img_diffuser():
         img_diffuser.load_weights(os.path.join(weight_path, weight_name + '.ckpt'))
     optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate, decay=0.00001)
     img_diffuser.compile(
-        # run_eagerly=True,
+        run_eagerly=True,
         optimizer=optimizer,
         loss=[
             loss_fn
@@ -139,12 +103,11 @@ def train_img_diffuser():
         save_freq='epoch',
         mode='min'
     )
-    x_wn_, x_tt_, x_ct_, y_ = datasets_id()
+    # x_wn_, x_tt_, x_ct_, y_ = load_image_from_files()
     with tf.device('/gpu:0'):
         img_diffuser.fit(
-            x=[x_wn_, x_tt_, x_ct_],
-            y=y_,
-            batch_size=batch_size,
+            x=generator_train(),
+            steps_per_epoch=100,
             epochs=num_epochs,
             callbacks=[
                 checkpoint
@@ -153,7 +116,7 @@ def train_img_diffuser():
 
 
 if __name__ == '__main__':
-    # train_img_diffuser()
+    train_img_diffuser()
     mdl_id = get_img_diffuser()
 
     # train_text_encoder()
@@ -167,7 +130,7 @@ if __name__ == '__main__':
         prompt='barding black cape celty_sturluson dress dullahan durarara!! headless highres horse horseback_riding '
                'janemere smoke solo',
         seed=None,
-        noise_guidance_scale=7.5,
+        noise_guidance_scale=30,
         batch_size=1
     )
     cv2.imshow('res', np.array(result)[0, :, :, :])
