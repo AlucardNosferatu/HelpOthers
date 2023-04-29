@@ -1,5 +1,7 @@
 import os
+import random
 
+import cv2
 import tensorflow as tf
 
 from Config_TF import SET_BS, WGT_PATH, EPOCHS
@@ -9,6 +11,36 @@ from Metrics_SD import loss_fn
 from Model_SD.StableDiffusion import full_convolution_net_for_sd
 from Tokenizer import do_tokenize, task_conv_chn
 from Train_TF import prepare_model
+
+
+class ShowPred(tf.keras.callbacks.Callback):
+
+    def __init__(self, steps_count, test_generator):
+        super().__init__()
+        self.show_step = None
+        self.show_epoch = None
+        self.show_this_epoch = None
+        self.step_count = steps_count
+        self.test_generator = test_generator
+
+    def on_epoch_begin(self, epoch, logs=None):
+        if epoch % 10 == 0:
+            self.show_this_epoch = True
+            self.show_epoch = epoch
+            self.show_step = random.randint(0, self.step_count - 1)
+        else:
+            self.show_this_epoch = False
+
+    def on_batch_end(self, batch, logs=None):
+        if self.show_this_epoch and batch == self.show_step:
+            x, y_true = self.test_generator.__next__()
+            y_pred = self.model.predict(x)
+            for i in range(y_true.shape[0]):
+                yt_fn = os.path.join('Result_SD', str(self.show_epoch) + '_' + str(i) + '_true.jpg')
+                yp_fn = os.path.join('Result_SD', str(self.show_epoch) + '_' + str(i) + '_pred.jpg')
+                cv2.imwrite(yt_fn, y_true[i, :, :, :])
+                cv2.imwrite(yp_fn, y_pred[i, :, :, :])
+            self.show_this_epoch = False
 
 
 def train_text_encoder(new_tokenizer=False):
@@ -62,12 +94,16 @@ def train_img_diffuser(debug=False):
         save_freq='epoch',
         mode='min'
     )
+    step_count = 100
+    gen_train = generator_train(random_yield=True)
+    showpred = ShowPred(step_count, gen_train)
     with tf.device('/gpu:0'):
         img_diffuser.fit(
-            x=generator_train(random_yield=True),
-            steps_per_epoch=100,
+            x=gen_train,
+            steps_per_epoch=step_count,
             epochs=num_epochs,
             callbacks=[
+                showpred,
                 checkpoint
             ]
         )
@@ -75,4 +111,4 @@ def train_img_diffuser(debug=False):
 
 if __name__ == '__main__':
     train_img_diffuser(debug=False)
-    train_text_encoder(new_tokenizer=False)
+    # train_text_encoder(new_tokenizer=False)
