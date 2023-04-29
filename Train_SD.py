@@ -15,16 +15,17 @@ from Train_TF import prepare_model
 
 class ShowPred(tf.keras.callbacks.Callback):
 
-    def __init__(self, steps_count, test_generator):
+    def __init__(self, steps_count, test_generator, every_epochs):
         super().__init__()
         self.show_step = None
         self.show_epoch = None
         self.show_this_epoch = None
         self.step_count = steps_count
+        self.every_epochs = every_epochs
         self.test_generator = test_generator
 
     def on_epoch_begin(self, epoch, logs=None):
-        if epoch % 10 == 0:
+        if epoch % self.every_epochs == 0:
             self.show_this_epoch = True
             self.show_epoch = epoch
             self.show_step = random.randint(0, self.step_count - 1)
@@ -97,7 +98,7 @@ def train_img_diffuser(debug=False):
     )
     step_count = 100
     gen_train = generator_train(random_yield=True)
-    showpred = ShowPred(step_count, gen_train)
+    showpred = ShowPred(step_count, gen_train, 1)
     with tf.device('/gpu:0'):
         img_diffuser.fit(
             x=gen_train,
