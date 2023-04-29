@@ -62,10 +62,9 @@ def train_img_diffuser(debug=False):
         save_freq='epoch',
         mode='min'
     )
-    # x_wn_, x_tt_, x_ct_, y_ = load_image_from_files()
     with tf.device('/gpu:0'):
         img_diffuser.fit(
-            x=generator_train(),
+            x=generator_train(random_yield=True),
             steps_per_epoch=100,
             epochs=num_epochs,
             callbacks=[

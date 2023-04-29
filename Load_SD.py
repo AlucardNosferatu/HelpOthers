@@ -105,9 +105,9 @@ def load_image_from_files(img_dir='Data_SD/Image', empty_ctx_path='Save_SD/empty
                 ts_tensor = np.squeeze(timestep_tensor(1, timestep))
                 with_noise = np.squeeze(
                     add_noise(np.reshape(image_, (1, img_shape[0], img_shape[1], rgb_channel)), timestep))
-                cv2.imshow('with_noise', with_noise)
-                cv2.imshow('without_noise', image_)
-                cv2.waitKey()
+                # cv2.imshow('with_noise', with_noise)
+                # cv2.imshow('without_noise', image_)
+                # cv2.waitKey()
                 x_wn.append(with_noise)
                 x_tt.append(ts_tensor)
                 x_ct.append(context)
