@@ -76,12 +76,14 @@ def load_prompt_from_txt(prompt_txt_filepath):
     return inputs, outputs, id_list
 
 
-def load_image_from_files(img_dir='Data_TF/Image', empty_ctx_path='Save_TF/empty_context.npy'):
+def load_image_from_files(img_dir='Data_SD/Image', empty_ctx_path='Save_SD/empty_context.npy', level_count=5,
+                          ts_count_per_level=5):
     context = np.squeeze(np.load(empty_ctx_path))
     img_files = os.listdir(img_dir)
     ids = [file.split('.')[0] for file in img_files]
     img_files = [os.path.join(img_dir, file) for file in img_files]
-    timesteps = np.arange(1, 1000, 1000 // num_steps)
+    timesteps_1 = np.arange(1, 1000, 1000 // num_steps)
+    timesteps_2 = timesteps_1[:int(timesteps_1.shape[0] / level_count)]
     x_wn = []
     x_tt = []
     x_ct = []
@@ -93,26 +95,44 @@ def load_image_from_files(img_dir='Data_TF/Image', empty_ctx_path='Save_TF/empty
         image_yuv[:, :, 0] = cv2.equalizeHist(image_yuv[:, :, 0])
         image = np.array(cv2.cvtColor(image_yuv, cv2.COLOR_YUV2RGB))
         image = image.astype('float32') / 255.0
-
-        timestep = random.choice(timesteps)
-        ts_tensor = np.squeeze(timestep_tensor(1, timestep))
-
-        with_noise = np.squeeze(
-            add_noise(np.reshape(image, (1, img_shape[0], img_shape[1], rgb_channel)), timestep))
-
-        x_wn.append(with_noise)
-        x_tt.append(ts_tensor)
-        x_ct.append(context)
-        y.append(image)
-
-        if len(y) >= batch_size:
-            input_pkl = [np.array(x_wn), np.array(x_tt), np.array(x_ct)]
-            pickle.dump(input_pkl, open(os.path.join('Data_SD/Array/Input', ids[i] + '.pkl'), 'wb'))
-            np.save(os.path.join('Data_SD/Array/Output', ids[i] + '.npy'), np.array(y))
-            x_wn.clear()
-            x_tt.clear()
-            x_ct.clear()
-            y.clear()
+        for j in range(ts_count_per_level):
+            image_ = np.copy(image)
+            for k in range(level_count):
+                if k == 0:
+                    timestep = random.choice(timesteps_1)
+                else:
+                    timestep = random.choice(timesteps_2)
+                ts_tensor = np.squeeze(timestep_tensor(1, timestep))
+                with_noise = np.squeeze(
+                    add_noise(np.reshape(image_, (1, img_shape[0], img_shape[1], rgb_channel)), timestep))
+                cv2.imshow('with_noise', with_noise)
+                cv2.imshow('without_noise', image_)
+                cv2.waitKey()
+                x_wn.append(with_noise)
+                x_tt.append(ts_tensor)
+                x_ct.append(context)
+                y.append(image_)
+                if len(y) >= batch_size:
+                    input_pkl = [np.array(x_wn), np.array(x_tt), np.array(x_ct)]
+                    pickle.dump(
+                        input_pkl,
+                        open(
+                            os.path.join(
+                                'Data_SD/Array/Input',
+                                ids[i] + '_' + str(j) + '_' + str(k) + '.pkl'
+                            ),
+                            'wb'
+                        )
+                    )
+                    np.save(
+                        os.path.join('Data_SD/Array/Output', ids[i] + '_' + str(j) + '_' + str(k) + '.npy'),
+                        np.array(y)
+                    )
+                    x_wn.clear()
+                    x_tt.clear()
+                    x_ct.clear()
+                    y.clear()
+                image_ = with_noise
 
 
 def read_ids():
@@ -144,6 +164,6 @@ if __name__ == '__main__':
     # save_prompt_to_txt('Data_TF/Prompt.txt', i, o, ids)
     # i, o, ids = load_prompt_from_txt('Data_TF/Prompt.txt')
     # tok, v_size = task_conv_chn(None, None, False, False)
-    # load_image_from_files()
+    load_image_from_files()
     g_in = generator_train()
     g_in.__next__()
