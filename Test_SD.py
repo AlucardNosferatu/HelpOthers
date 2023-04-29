@@ -8,7 +8,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from Config_SD import rgb_channel, num_steps
-from DL.Config_FCN import img_shape
+from DL.Config_FCN import img_shape, batch_size
 from Model_SD.Constant import ALPHAS_CUMPROD
 from Model_SD.StableDiffusion import get_img_diffuser, get_text_encoder
 from Test_TF import sent2vec
@@ -18,14 +18,14 @@ from Utilities_SD import timestep_tensor, add_noise
 
 def get_denoise_img(
         model_id,
-        batch_size,
+        bsize,
         img_with_context,
         timestep,
         context,
         empty_context,
         noise_guidance_scale
 ):
-    timestep = timestep_tensor(batch_size, timestep)
+    timestep = timestep_tensor(bsize, timestep)
 
     img_without_context = model_id.predict_on_batch(
         [img_with_context, timestep, empty_context]
@@ -40,7 +40,7 @@ def get_denoise_img(
 
 def get_initial_params(
         timesteps,
-        batch_size,
+        bsize,
         seed,
         input_image=None,
         input_img_noise_t=None
@@ -50,9 +50,9 @@ def get_initial_params(
     alphas = [ALPHAS_CUMPROD[t] for t in timesteps]
     alphas_prev = [1.0] + alphas[:-1]
     if input_image is None:
-        latent = tf.random.normal((batch_size, n_h, n_w, rgb_channel), seed=seed)
+        latent = tf.random.normal((bsize, n_h, n_w, rgb_channel), seed=seed)
     else:
-        latent = tf.repeat(input_image, batch_size, axis=0)
+        latent = tf.repeat(input_image, bsize, axis=0)
         latent = add_noise(latent, input_img_noise_t)
     return latent, alphas, alphas_prev
 
@@ -76,12 +76,12 @@ def get_prompt_img(
         prompt,
         seed,
         noise_guidance_scale,
-        batch_size=1
+        bsize=1
 ):
     tok, vocab_size = task_conv_chn(None, None, False, False)
     start_tok, end_tok = [vocab_size], [vocab_size + 1]
     prompt_vec = sent2vec(end_tok, prompt, start_tok, tok, ' ')
-    prompt_vec = np.repeat(prompt_vec, batch_size, axis=0)
+    prompt_vec = np.repeat(prompt_vec, bsize, axis=0)
     context = model_te.predict_on_batch(prompt_vec)
 
     input_image_tensor = None
@@ -100,12 +100,12 @@ def get_prompt_img(
         # input_image_tensor = tf.cast((input_image_array / 255.0) * 2 - 1, tf.float32)
         input_image_tensor = tf.cast(input_image_array / 255.0, tf.float32)
 
-    empty_context = get_empty_context(batch_size, end_tok, model_te, start_tok, tok)
+    empty_context = get_empty_context(bsize, model_te, start_tok, end_tok, tok)
 
     timesteps = np.arange(1, 1000, 1000 // num_steps)
     input_img_noise_t = timesteps[int(len(timesteps) * noise_image_strength)]
     latent, alphas, alphas_prev = get_initial_params(
-        timesteps, batch_size, seed, input_image=input_image_tensor, input_img_noise_t=input_img_noise_t
+        timesteps, bsize, seed, input_image=input_image_tensor, input_img_noise_t=input_img_noise_t
     )
 
     if noise_image is not None:
@@ -116,7 +116,7 @@ def get_prompt_img(
         progbar.set_description(f"{index:3d} {timestep:3d}")
         e_t = get_denoise_img(
             model_id=model_id,
-            batch_size=batch_size,
+            bsize=bsize,
             img_with_context=latent,
             timestep=timestep,
             context=context,
@@ -130,14 +130,21 @@ def get_prompt_img(
     return latent
 
 
-def get_empty_context(batch_size, end_tok, model_te, start_tok, tok):
+def get_empty_context(bsize, model_te, start_tok=None, end_tok=None, tok=None):
+    if tok is None:
+        tok, vocab_size = task_conv_chn(None, None, False, False)
+    vocab_size = len(tok[0]) + 1
+    if start_tok is None:
+        start_tok = [vocab_size]
+    if end_tok is None:
+        end_tok = [vocab_size + 1]
     ec_path = 'Save_SD/empty_context.npy'
     if os.path.exists(ec_path):
         empty_context = np.load(ec_path)
     else:
         empty_prompt = ''
         empty_prompt_vec = sent2vec(end_tok, empty_prompt, start_tok, tok, ' ')
-        empty_prompt_vec = np.repeat(empty_prompt_vec, batch_size, axis=0)
+        empty_prompt_vec = np.repeat(empty_prompt_vec, bsize, axis=0)
         empty_context = model_te.predict_on_batch(empty_prompt_vec)
         np.save(ec_path, empty_context)
     return empty_context
@@ -146,6 +153,7 @@ def get_empty_context(batch_size, end_tok, model_te, start_tok, tok):
 if __name__ == '__main__':
     mdl_id = get_img_diffuser()
     mdl_te = get_text_encoder()
+    get_empty_context(bsize=batch_size, model_te=mdl_te)
     result = get_prompt_img(
         model_id=mdl_id,
         model_te=mdl_te,
@@ -155,7 +163,7 @@ if __name__ == '__main__':
                'janemere smoke solo',
         seed=None,
         noise_guidance_scale=30,
-        batch_size=1
+        bsize=1
     )
     cv2.imshow('res', np.array(result)[0, :, :, :])
     cv2.waitKey()
