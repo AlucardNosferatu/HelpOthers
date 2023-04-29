@@ -28,6 +28,7 @@ class ShowPred(tf.keras.callbacks.Callback):
             self.show_this_epoch = True
             self.show_epoch = epoch
             self.show_step = random.randint(0, self.step_count - 1)
+            print('Test batch will be generated after step:', self.show_step)
         else:
             self.show_this_epoch = False
 
@@ -38,8 +39,8 @@ class ShowPred(tf.keras.callbacks.Callback):
             for i in range(y_true.shape[0]):
                 yt_fn = os.path.join('Result_SD', str(self.show_epoch) + '_' + str(i) + '_true.jpg')
                 yp_fn = os.path.join('Result_SD', str(self.show_epoch) + '_' + str(i) + '_pred.jpg')
-                cv2.imwrite(yt_fn, y_true[i, :, :, :])
-                cv2.imwrite(yp_fn, y_pred[i, :, :, :])
+                cv2.imwrite(yt_fn, (y_true[i, :, :, :] * 255).astype('uint8'))
+                cv2.imwrite(yp_fn, (y_pred[i, :, :, :] * 255).astype('uint8'))
             self.show_this_epoch = False
 
 
