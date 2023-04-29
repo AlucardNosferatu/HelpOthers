@@ -43,15 +43,15 @@ def build_output_block():
     bn_4 = tf.keras.layers.BatchNormalization()
     x = bn_4(x)
 
-    # conv2dt_5 = tf.keras.layers.Conv2DTranspose(filters=16, kernel_size=(32, 32), strides=(2, 2), padding='same')
-    # lrelu_5 = tf.keras.layers.LeakyReLU()
-    # x = lrelu_5(x)
-    # x = conv2dt_5(x)
-    # bn_5 = tf.keras.layers.BatchNormalization()
-    # x = bn_5(x)
+    conv2dt_5 = tf.keras.layers.Conv2DTranspose(filters=16, kernel_size=(32, 32), strides=(2, 2), padding='same')
+    lrelu_5 = tf.keras.layers.LeakyReLU()
+    x = lrelu_5(x)
+    x = conv2dt_5(x)
+    bn_5 = tf.keras.layers.BatchNormalization()
+    x = bn_5(x)
 
-    us_3 = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation='bilinear')
-    x = us_3(x)
+    # us_3 = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation='bilinear')
+    # x = us_3(x)
 
     conv2dt_6 = tf.keras.layers.Conv2DTranspose(filters=3, kernel_size=(32, 32), strides=(1, 1), padding='same',
                                                 activation=tf.keras.activations.sigmoid)
