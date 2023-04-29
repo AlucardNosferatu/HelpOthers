@@ -1,5 +1,7 @@
 import math
+import os
 
+import cv2
 import numpy as np
 import tensorflow as tf
 from PIL import Image
@@ -98,15 +100,7 @@ def get_prompt_img(
         # input_image_tensor = tf.cast((input_image_array / 255.0) * 2 - 1, tf.float32)
         input_image_tensor = tf.cast(input_image_array / 255.0, tf.float32)
 
-    ec_path = 'Save_TF/empty_context.npy'
-    if os.path.exists(ec_path):
-        empty_context = np.load(ec_path)
-    else:
-        empty_prompt = ''
-        empty_prompt_vec = sent2vec(end_tok, empty_prompt, start_tok, tok, ' ')
-        empty_prompt_vec = np.repeat(empty_prompt_vec, batch_size, axis=0)
-        empty_context = model_te.predict_on_batch(empty_prompt_vec)
-        np.save(ec_path, empty_context)
+    empty_context = get_empty_context(batch_size, end_tok, model_te, start_tok, tok)
 
     timesteps = np.arange(1, 1000, 1000 // num_steps)
     input_img_noise_t = timesteps[int(len(timesteps) * noise_image_strength)]
@@ -136,13 +130,26 @@ def get_prompt_img(
     return latent
 
 
+def get_empty_context(batch_size, end_tok, model_te, start_tok, tok):
+    ec_path = 'Save_SD/empty_context.npy'
+    if os.path.exists(ec_path):
+        empty_context = np.load(ec_path)
+    else:
+        empty_prompt = ''
+        empty_prompt_vec = sent2vec(end_tok, empty_prompt, start_tok, tok, ' ')
+        empty_prompt_vec = np.repeat(empty_prompt_vec, batch_size, axis=0)
+        empty_context = model_te.predict_on_batch(empty_prompt_vec)
+        np.save(ec_path, empty_context)
+    return empty_context
+
+
 if __name__ == '__main__':
     mdl_id = get_img_diffuser()
     mdl_te = get_text_encoder()
     result = get_prompt_img(
         model_id=mdl_id,
         model_te=mdl_te,
-        noise_image='Data_TF/Image/8.JPEG',
+        noise_image='Data_SD/Image/8.JPEG',
         noise_image_strength=0.1,
         prompt='barding black cape celty_sturluson dress dullahan durarara!! headless highres horse horseback_riding '
                'janemere smoke solo',

@@ -113,4 +113,4 @@ def train_img_diffuser(debug=False):
 
 if __name__ == '__main__':
     train_img_diffuser(debug=False)
-    # train_text_encoder(new_tokenizer=False)
+    train_text_encoder(new_tokenizer=False)

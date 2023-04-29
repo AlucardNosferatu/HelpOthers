@@ -155,13 +155,13 @@ def generator_train(random_yield=False):
 
 
 if __name__ == '__main__':
-    # i, o, ids = load_prompt_from_csv(
-    #     'Data_TF/all_data.csv',
-    #     skip_download=1341,
-    #     download_image=True,
-    #     load_length=1000
-    # )
-    # save_prompt_to_txt('Data_TF/Prompt.txt', i, o, ids)
+    i_, o_, ids__ = load_prompt_from_csv(
+        'Data_SD/all_data.csv',
+        skip_download=1341,
+        download_image=True,
+        load_length=1000
+    )
+    save_prompt_to_txt('Data_SD/Prompt.txt', i_, o_, ids__)
     # i, o, ids = load_prompt_from_txt('Data_TF/Prompt.txt')
     # tok, v_size = task_conv_chn(None, None, False, False)
     load_image_from_files()
