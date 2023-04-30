@@ -78,7 +78,7 @@ def train_img_diffuser(debug=False):
     )
     if os.path.exists(os.path.join(weight_path, weight_name + '.ckpt.index')):
         img_diffuser.load_weights(os.path.join(weight_path, weight_name + '.ckpt'))
-    optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate, decay=0.00001)
+    optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
     img_diffuser.compile(
         run_eagerly=debug,
         optimizer=optimizer,
