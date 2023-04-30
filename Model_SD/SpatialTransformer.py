@@ -151,7 +151,10 @@ class SpatialTransformer(tf.keras.layers.Layer):
         x_in = x
         x = self.norm(x)
         x = self.proj_in(x)
-        x = tf.reshape(x, (-1, h * w, c))
+        if h is None or w is None:
+            x = tf.reshape(x, (-1, None, c))
+        else:
+            x = tf.reshape(x, (-1, h * w, c))
         for block in self.transformer_blocks:
             x = block([x, context])
         x = tf.reshape(x, (-1, h, w, c))
