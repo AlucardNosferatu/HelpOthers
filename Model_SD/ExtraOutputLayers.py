@@ -14,26 +14,26 @@ def build_output_block(st_heads=2):
     input_tensor_time = tf.keras.Input(shape=(num_steps,))
     input_tensor_context = tf.keras.Input(shape=(MAX_SL, WORD_VEC_DIM))
 
-    x = ResBlock(128, 64)(input_tensor, input_tensor_time)
+    x = tf.keras.layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(input_tensor)
 
-    x = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(x)
+    x = ResBlock(64, WORD_VEC_DIM * st_heads)([x, input_tensor_time])
+    x = SpatialTransformer(WORD_VEC_DIM * st_heads, st_heads, WORD_VEC_DIM)([x, input_tensor_context])
+    x = ResBlock(WORD_VEC_DIM * st_heads, 64)([x, input_tensor_time])
 
-    x = ResBlock(64, WORD_VEC_DIM * st_heads)(x, input_tensor_time)
-    x = SpatialTransformer(WORD_VEC_DIM * st_heads, st_heads, WORD_VEC_DIM)(x, input_tensor_context)
-    x = ResBlock(WORD_VEC_DIM * st_heads, 64)(x, input_tensor_time)
+    x = tf.keras.layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(x)
 
-    x = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(x)
+    x = ResBlock(64, WORD_VEC_DIM * st_heads)([x, input_tensor_time])
+    x = SpatialTransformer(WORD_VEC_DIM * st_heads, st_heads, WORD_VEC_DIM)([x, input_tensor_context])
+    x = ResBlock(WORD_VEC_DIM * st_heads, 64)([x, input_tensor_time])
 
-    x = ResBlock(64, WORD_VEC_DIM * st_heads)(x, input_tensor_time)
-    x = SpatialTransformer(WORD_VEC_DIM * st_heads, st_heads, WORD_VEC_DIM)(x, input_tensor_context)
-    x = ResBlock(WORD_VEC_DIM * st_heads, 64)(x, input_tensor_time)
+    x = tf.keras.layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(x)
 
-    x = tf.keras.layers.UpSampling2D(size=(2, 2), interpolation='bilinear')(x)
+    x = ResBlock(64, WORD_VEC_DIM * st_heads)([x, input_tensor_time])
+    x = SpatialTransformer(WORD_VEC_DIM * st_heads, st_heads, WORD_VEC_DIM)([x, input_tensor_context])
+    x = ResBlock(WORD_VEC_DIM * st_heads, 64)([x, input_tensor_time])
 
-    x = ResBlock(64, WORD_VEC_DIM * st_heads)(x, input_tensor_time)
-    x = SpatialTransformer(WORD_VEC_DIM * st_heads, st_heads, WORD_VEC_DIM)(x, input_tensor_context)
-    x = ResBlock(WORD_VEC_DIM * st_heads, 3)(x, input_tensor_time)
-
+    x = tf.keras.layers.Conv2D(3, kernel_size=(4, 4), strides=(2, 2), padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Activation('sigmoid')(x)
 
     new_model = tf.keras.Model(inputs=[input_tensor, input_tensor_time, input_tensor_context], outputs=x)

@@ -21,10 +21,9 @@ def transformer_encoder(transformer_full: tf.keras.Model):
 
 
 def full_convolution_net_for_sd(
-        time_encoded_dim=64,
         io_boundary=19,
         resb_channel=64,
-        st_heads=8
+        st_heads=4
 ):
     def apply(x_, layer_, emb_=None, context_=None):
         if isinstance(layer_, ResBlock):
@@ -39,9 +38,9 @@ def full_convolution_net_for_sd(
 
     t_emb = tf.keras.Input((num_steps,))
     time_embed = [
-        tf.keras.layers.Dense(time_encoded_dim),
+        tf.keras.layers.Dense(num_steps),
         tf.keras.activations.swish,
-        tf.keras.layers.Dense(time_encoded_dim),
+        tf.keras.layers.Dense(num_steps),
     ]
     emb = apply_seq(t_emb, time_embed)
 
@@ -84,10 +83,9 @@ def get_text_encoder():
 
 def get_img_diffuser():
     img_diffuser = full_convolution_net_for_sd(
-        time_encoded_dim=64,
         io_boundary=19,
         resb_channel=64,
-        st_heads=8
+        st_heads=4
     )
     if os.path.exists(os.path.join(weight_path, weight_name + '.ckpt.index')):
         img_diffuser.load_weights(os.path.join(weight_path, weight_name + '.ckpt'))

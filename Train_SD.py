@@ -71,10 +71,9 @@ def train_text_encoder(new_tokenizer=False):
 
 def train_img_diffuser(debug=False):
     img_diffuser = full_convolution_net_for_sd(
-        time_encoded_dim=64,
         io_boundary=19,
         resb_channel=64,
-        st_heads=8
+        st_heads=4
     )
     if os.path.exists(os.path.join(weight_path, weight_name + '.ckpt.index')):
         img_diffuser.load_weights(os.path.join(weight_path, weight_name + '.ckpt'))
