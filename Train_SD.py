@@ -10,6 +10,7 @@ from Load_SD import load_prompt_from_txt, generator_train
 from Metrics_SD import loss_fn
 from Model_SD.StableDiffusion import full_convolution_net_for_sd
 from Tokenizer import do_tokenize, task_conv_chn
+from Train_FCN import activate_growth
 from Train_TF import prepare_model
 
 
@@ -111,5 +112,6 @@ def train_img_diffuser(debug=False):
 
 
 if __name__ == '__main__':
+    activate_growth()
     train_img_diffuser(debug=False)
     train_text_encoder(new_tokenizer=False)
