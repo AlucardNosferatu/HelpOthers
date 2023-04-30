@@ -11,27 +11,27 @@ def build_output_block():
 
     x = tf.keras.layers.UpSampling2D(size=(8, 8), interpolation='bilinear')(input_tensor)
 
-    x = tf.keras.layers.Conv2D(128, (32, 32), padding='same')(x)
+    x = tf.keras.layers.Conv2D(64, (16, 16), padding='same')(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Activation('selu')(x)
 
-    x = tf.keras.layers.Conv2DTranspose(64, (32, 32), (2, 2), padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Activation('selu')(x)
-
-    # x = tf.keras.layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(x)
-
-    x = tf.keras.layers.Conv2D(32, (16, 16), padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Activation('selu')(x)
-
-    x = tf.keras.layers.Conv2DTranspose(16, (16, 16), (2, 2), padding='same')(x)
+    x = tf.keras.layers.Conv2DTranspose(32, (16, 16), (2, 2), padding='same')(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Activation('selu')(x)
 
     # x = tf.keras.layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(x)
 
-    x = tf.keras.layers.Conv2D(3, (8, 8), strides=(1, 1), padding='same')(x)
+    x = tf.keras.layers.Conv2D(16, (8, 8), padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Activation('selu')(x)
+
+    x = tf.keras.layers.Conv2DTranspose(8, (8, 8), (2, 2), padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Activation('selu')(x)
+
+    # x = tf.keras.layers.UpSampling2D(size=(4, 4), interpolation='bilinear')(x)
+
+    x = tf.keras.layers.Conv2D(3, (4, 4), strides=(1, 1), padding='same')(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Activation('sigmoid')(x)
 
