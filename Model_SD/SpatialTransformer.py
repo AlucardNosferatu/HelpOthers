@@ -83,16 +83,9 @@ class CrossAttention(tf.keras.layers.Layer):
         context = x if context is None else context
         q, k, v = self.to_q(x), self.to_k(context), self.to_v(context)
         assert len(x.shape) == 3
-        if x.shape[1] is not None:
-            q = tf.reshape(q, (-1, x.shape[1], self.num_heads, self.head_size))
-        else:
-            q = tf.reshape(q, (-1, -1, self.num_heads, self.head_size))
-        if context.shape[1] is not None:
-            k = tf.reshape(k, (-1, context.shape[1], self.num_heads, self.head_size))
-            v = tf.reshape(v, (-1, context.shape[1], self.num_heads, self.head_size))
-        else:
-            k = tf.reshape(k, (-1, -1, self.num_heads, self.head_size))
-            v = tf.reshape(v, (-1, -1, self.num_heads, self.head_size))
+        q = tf.reshape(q, (-1, x.shape[1], self.num_heads, self.head_size))
+        k = tf.reshape(k, (-1, context.shape[1], self.num_heads, self.head_size))
+        v = tf.reshape(v, (-1, context.shape[1], self.num_heads, self.head_size))
 
         q = tf.keras.layers.Permute((2, 1, 3))(q)  # (bs, num_heads, time, head_size)
         k = tf.keras.layers.Permute((2, 3, 1))(k)  # (bs, num_heads, head_size, time)
@@ -158,14 +151,8 @@ class SpatialTransformer(tf.keras.layers.Layer):
         x_in = x
         x = self.norm(x)
         x = self.proj_in(x)
-        if h is None or w is None:
-            x = tf.reshape(x, (-1, -1, c))
-        else:
-            x = tf.reshape(x, (-1, h * w, c))
+        x = tf.reshape(x, (-1, h * w, c))
         for block in self.transformer_blocks:
             x = block([x, context])
-        if h is None or w is None:
-            x = tf.reshape(x, (-1, -1, -1, c))
-        else:
-            x = tf.reshape(x, (-1, h, w, c))
+        x = tf.reshape(x, (-1, h, w, c))
         return self.proj_out(x) + x_in
