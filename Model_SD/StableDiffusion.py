@@ -61,7 +61,7 @@ def full_convolution_net_for_sd(
     # for layer in output_block:
     #     x = apply(x, layer, emb, context)
     output_block = build_output_block()
-    x = output_block(x)
+    x = output_block([x, emb, context])
     new_model = tf.keras.Model(inputs=[fcn.input, t_emb, context], outputs=x)
     return new_model
 
