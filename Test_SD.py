@@ -8,7 +8,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from Config_SD import rgb_channel, num_steps
-from DL.Config_FCN import img_shape, batch_size
+from DL.Config_FCN import img_shape
 from Model_SD.Constant import ALPHAS_CUMPROD
 from Model_SD.StableDiffusion import get_img_diffuser, get_text_encoder
 from Test_TF import sent2vec
