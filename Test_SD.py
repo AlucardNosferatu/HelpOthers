@@ -130,7 +130,7 @@ def get_prompt_img(
     return latent
 
 
-def get_empty_context(bsize, model_te, start_tok=None, end_tok=None, tok=None):
+def get_empty_context(bsize, model_te, start_tok=None, end_tok=None, tok=None, force_update=False):
     if tok is None:
         tok, vocab_size = task_conv_chn(None, None, False, False)
     vocab_size = len(tok[0]) + 1
@@ -138,8 +138,9 @@ def get_empty_context(bsize, model_te, start_tok=None, end_tok=None, tok=None):
         start_tok = [vocab_size]
     if end_tok is None:
         end_tok = [vocab_size + 1]
+
     ec_path = 'Save_SD/empty_context.npy'
-    if os.path.exists(ec_path):
+    if os.path.exists(ec_path) and not force_update:
         empty_context = np.load(ec_path)
     else:
         empty_prompt = ''
