@@ -25,9 +25,9 @@ def data_load(new_data=False):
 def model_build():
     inputs = tf.keras.Input(shape=(32,))
     x = tf.keras.layers.Dense(1024, activation=tf.nn.tanh)(inputs)
+    x = tf.keras.layers.Dense(512, activation=tf.nn.tanh)(x)
     x = tf.keras.layers.Dense(1024, activation=tf.nn.tanh)(x)
-    x = tf.keras.layers.Dense(1024, activation=tf.nn.tanh)(x)
-    x = tf.keras.layers.Dense(1024, activation=tf.nn.tanh)(x)
+    x = tf.keras.layers.Dense(512, activation=tf.nn.tanh)(x)
     outputs = tf.keras.layers.Dense(5)(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
