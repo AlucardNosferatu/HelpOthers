@@ -58,7 +58,7 @@ def read_file(data_file_path='my_personality.csv', processor=None, tokenize_batc
         s_agr = row['sAGR']
         s_con = row['sCON']
         s_opn = row['sOPN']
-        score = [s_ext, s_neu, s_agr, s_con, s_opn]
+        score = [s_ext / 5, s_neu / 5, s_agr / 5, s_con / 5, s_opn / 5]
         text = unify_symbol(text)
         texts = extract_parenthesis(text)
         for text in texts:

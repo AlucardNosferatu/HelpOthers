@@ -24,19 +24,23 @@ def data_load(new_data=False):
 
 def model_build():
     inputs = tf.keras.Input(shape=(32,))
-    x = tf.keras.layers.Dense(1024, activation=tf.nn.tanh)(inputs)
-    x = tf.keras.layers.Dense(512, activation=tf.nn.tanh)(x)
-    x = tf.keras.layers.Dense(1024, activation=tf.nn.tanh)(x)
-    x = tf.keras.layers.Dense(512, activation=tf.nn.tanh)(x)
-    outputs = tf.keras.layers.Dense(5)(x)
+    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(inputs)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    outputs = tf.keras.layers.Dense(5, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
 
 
 def model_train(model):
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
-        loss=tf.keras.losses.MeanSquaredError(),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
+        loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy']
     )
     ckpt = tf.keras.callbacks.ModelCheckpoint(
@@ -46,7 +50,7 @@ def model_train(model):
         save_best_only=True,
     )
     with tf.device('/gpu:0'):
-        model.fit(x=all_input_, y=all_output_, batch_size=512, epochs=10000, callbacks=[ckpt])
+        model.fit(x=all_input_, y=all_output_, batch_size=2048, epochs=10000, callbacks=[ckpt])
 
 
 def model_test(model, processor=None, data_file_path='my_personality.csv', least_words=3, most_word=30):
@@ -85,7 +89,7 @@ def model_test(model, processor=None, data_file_path='my_personality.csv', least
 if __name__ == '__main__':
     train = True
     test = not train
-    all_input_, all_output_ = data_load()
+    all_input_, all_output_ = data_load(new_data=False)
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5')
     else:
