@@ -80,14 +80,18 @@ def model_test(model, processor=None, data_file_path='my_personality.csv', least
                     print('pred:', res.tolist()[0])
                     print('true:', score)
                     print('diff:', np.array(score) - res[0, :])
-        cmd = ''
-        while cmd not in ['y', 'n']:
-            cmd = input('continue?:y/n\n')
-        flag = (cmd == 'y')
+                    cmd = ''
+                    while cmd not in ['y', 'n']:
+                        cmd = input('continue?:y/n\n')
+                    flag = (cmd == 'y')
+                if not flag:
+                    break
+            if not flag:
+                break
 
 
 if __name__ == '__main__':
-    train = True
+    train = False
     test = not train
     all_input_, all_output_ = data_load(new_data=False)
     if os.path.exists('ScorePredictor.h5'):
