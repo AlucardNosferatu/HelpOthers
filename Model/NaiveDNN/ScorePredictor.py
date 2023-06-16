@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from DataReader import read_file, unify_symbol, extract_parenthesis
+from Data.NaiveDNN.DataReader import read_file, unify_symbol, extract_parenthesis
 from TextEncoder import build_processor, tokenize
 
 
@@ -14,11 +14,11 @@ def data_load(new_data=False):
         all_input, all_output = read_file(tokenize_batch=64)
         all_input = np.array(all_input)
         all_output = np.array(all_output)
-        np.save('Input.npy', all_input)
-        np.save('Output.npy', all_output)
+        np.save('../../Data/NaiveDNN/Input.npy', all_input)
+        np.save('../../Data/NaiveDNN/Output.npy', all_output)
     else:
-        all_input = np.load('Input.npy')
-        all_output = np.load('Output.npy')
+        all_input = np.load('../../Data/NaiveDNN/Input.npy')
+        all_output = np.load('../../Data/NaiveDNN/Output.npy')
     return all_input, all_output
 
 
@@ -76,7 +76,7 @@ def model_test(model, processor=None, data_file_path='my_personality.csv', least
                 if least_words < len(text_slice.split(' ')) < most_word:
                     print('text:', text_slice.lower())
                     embedding = tokenize([text_slice.lower()], processor)
-                    res = model.predict(x=embedding)
+                    res = model.predict(x=embedding) * 5
                     print('pred:', res.tolist()[0])
                     print('true:', score)
                     print('diff:', np.array(score) - res[0, :])
