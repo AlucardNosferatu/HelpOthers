@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+
 from tqdm import tqdm
 
 from Model.NaiveDNN.TextEncoder import tokenize, build_processor
@@ -9,6 +10,19 @@ def unify_symbol(text):
     text = text.strip()
     text = text.replace(',', '.').replace('!', '.').replace('?', '.')
     text = text.replace('[', '(').replace('{', '(').replace(']', ')').replace('}', ')')
+    text = text.replace(
+        "'s",
+        ' is'
+    ).replace(
+        "'re",
+        ' are'
+    ).replace(
+        "'t",
+        ' not'
+    ).replace(
+        "'ll",
+        ' will'
+    ).replace("'d", ' would').replace("'d", ' would').replace("'ve", ' have').replace("'m", ' am')
     return text
 
 

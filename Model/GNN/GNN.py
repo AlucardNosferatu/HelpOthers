@@ -1,3 +1,4 @@
+import nltk
 import numpy as np
 import tensorflow as tf
 
@@ -38,11 +39,12 @@ class GraphConv(tf.keras.layers.Layer):
 
 
 if __name__ == '__main__':
+    nltk.download('averaged_perceptron_tagger')
     all_input, all_output = read_file(
         data='../../Data/my_personality.csv',
         mapper=None,
         least_words=3,
-        most_word=30,
+        most_word=32,
         vocab_size=128,
         limit_text=64,
         limit_author=64
