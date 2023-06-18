@@ -4,7 +4,7 @@ import pandas as pd
 from py2neo import Graph, Node, Relationship, NodeMatcher
 from tqdm import tqdm
 
-from Data.GNN.DataReader import get_mapper, unify_word_form
+from Data.GNN.Utils import unify_word_form, get_mapper
 from Data.GNN.PPMI import pmi
 from Data.GNN.TF_IDF import tf_idf_python
 from Data.NaiveDNN.DataReader import unify_symbol, extract_parenthesis
