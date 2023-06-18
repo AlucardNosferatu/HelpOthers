@@ -1,6 +1,5 @@
 import time
 
-import cv2
 import numpy as np
 import pandas as pd
 from py2neo import Graph, NodeMatcher, RelationshipMatcher
@@ -9,11 +8,11 @@ from tqdm import tqdm
 from Data.GNN.DataReader import get_mapper
 
 
-def read_graph(vocab_size, limit_text, limit_author, mapper=None, data='my_personality.csv'):
+def read_graph(start_index, vocab_size, limit_text, limit_author, mapper=None, data='my_personality.csv'):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(data, limit_author, limit_text, vocab_size)
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size)
     print('原始数据和Batch数据已载入')
     graph = Graph("bolt://localhost:7687", auth=("neo4j", "20291224"))
     word2index = mapper['w2i']

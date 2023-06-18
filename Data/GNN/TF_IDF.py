@@ -49,8 +49,8 @@ def tf_idf_python(corpus, word_all=None):
                     word_all.append(x)
         word_all = list(set(word_all))  # 集合去重词库
     # 开始计算tf-idf
-    weight = [[] for i in corpus]
-    weight_idf = [[] for i in corpus]
+    weight = [[] for _ in corpus]
+    weight_idf = [[] for _ in corpus]
     for word in tqdm(word_all):
         for i in range(len(corpus)):
             temp_list = corpus[i].split()
@@ -71,7 +71,7 @@ def tf_idf_python(corpus, word_all=None):
     # for w in weight:
     #     print(w)
     # L2范式归一化过程
-    l2_weight = [[] for i in range(len(corpus))]
+    l2_weight = [[] for _ in range(len(corpus))]
     for text_index in range(len(weight)):
         all2plus = 0
         for word_weight in weight[text_index]:

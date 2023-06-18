@@ -18,11 +18,12 @@ def clear_graph(graph=None):
 
 
 # 建立除w-w以外的关系
-def build_graph(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv', reset=True):
+def build_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv',
+                reset=True):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(data, limit_author, limit_text, vocab_size)
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size)
     print('原始数据和Batch数据已载入')
     lemmatizer = None
     stemmer = None
@@ -31,10 +32,10 @@ def build_graph(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None,
     if reset:
         clear_graph(graph)
         print('图数据库已清空')
-    tf_idf, vocab, pmi_pairs = get_weights(lemmatizer, mapper, speller, stemmer)
+    tf_idf, vocab, pmi_pairs = get_weights(mapper, lemmatizer, speller, stemmer)
     print('TF-IDF和PMI计算完成')
     print('开始建立作者-文档、文档-词汇关系')
-    for index in tqdm(range(data.shape[0])):
+    for index in tqdm(range(start_index, data.shape[0])):
         row = data.iloc[index, :]
         text = row['STATUS'].lower()
         author = row['#AUTHID']
@@ -94,7 +95,7 @@ def build_graph(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None,
     return mapper, data
 
 
-def get_weights(lemmatizer, mapper, speller, stemmer):
+def get_weights(mapper, lemmatizer, speller, stemmer):
     print('汇总并格式化语料')
     text_for_weight = mapper['tlist'].copy()
     text_for_weight = [unify_symbol(item) for item in text_for_weight]

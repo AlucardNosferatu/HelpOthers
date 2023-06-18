@@ -16,12 +16,13 @@ pos_map = {
 nltk.download('averaged_perceptron_tagger')
 
 
-def count_total(data='my_personality.csv', limit_text=None, limit_author=None):
+def count_total(start_index, data='my_personality.csv', limit_text=None, limit_author=None):
     if type(data) is str:
         data = pd.read_csv(data)
     text_count_list = []
     author_count_list = []
-    for i in tqdm(range(data.shape[0])):
+    last_index = 0
+    for i in tqdm(range(start_index, data.shape[0])):
         row = data.iloc[i, :]
         text = row['STATUS']
         if text not in text_count_list:
@@ -29,13 +30,14 @@ def count_total(data='my_personality.csv', limit_text=None, limit_author=None):
                 pass
             else:
                 text_count_list.append(text.lower())
+                last_index = i
         author = row['#AUTHID']
         if author not in author_count_list:
             if limit_author is not None and len(author_count_list) >= limit_author:
                 pass
             else:
                 author_count_list.append(author)
-    return data, text_count_list, author_count_list
+    return data, text_count_list, author_count_list, last_index
 
 
 def limit_vocab(text_count_list, vocab_size):
@@ -61,19 +63,19 @@ def limit_vocab(text_count_list, vocab_size):
     return word2index, index2word
 
 
-def read_file(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv', least_words=3,
-              most_word=30):
+def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv',
+              least_words=3, most_word=30):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(data, limit_author, limit_text, vocab_size)
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size)
     print('原始数据和Batch数据已载入')
     lemmatizer = None
     stemmer = None
     speller = None
     all_input = []
     all_output = []
-    for index in tqdm(range(data.shape[0])):
+    for index in tqdm(range(start_index, data.shape[0])):
         row = data.iloc[index, :]
         text = row['STATUS'].lower()
         author = row['#AUTHID']
@@ -121,13 +123,10 @@ def read_file(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, d
     return all_input, all_output, mapper, data
 
 
-def get_mapper(data, limit_author, limit_text, vocab_size):
+def get_mapper(start_index, data, limit_author, limit_text, vocab_size):
     print('提取Batch文档及作者')
-    data, text_count_list, author_count_list = count_total(
-        data=data,
-        limit_text=limit_text,
-        limit_author=limit_author
-    )
+    data, text_count_list, author_count_list, last_index = count_total(start_index, data=data, limit_text=limit_text,
+                                                                       limit_author=limit_author)
     time.sleep(1)
     print('Batch文档及作者已提取')
     print('提取Batch词汇')
@@ -138,7 +137,8 @@ def get_mapper(data, limit_author, limit_text, vocab_size):
         'i2w': index2word,
         'tlist': text_count_list,
         'alist': author_count_list,
-        'total_dim': len(author_count_list) + len(text_count_list) + vocab_size
+        'total_dim': len(author_count_list) + len(text_count_list) + vocab_size,
+        'last_index': last_index
     }
     return data, mapper
 
