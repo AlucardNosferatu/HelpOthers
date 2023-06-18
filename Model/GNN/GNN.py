@@ -45,24 +45,32 @@ if __name__ == '__main__':
     limit_text = 126
     limit_author = 2
     start_index = 0
-    print('第一步：建立Batch的图')
-    mapper_, data_ = build_graph(
-        start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author, mapper=None,
-        data='../../Data/my_personality.csv', reset=True)
-    print('第二步：读取Batch范围内的数据')
-    all_input, all_output, mapper_, data_ = read_file(
-        start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-        mapper=mapper_, data=data_, least_words=3, most_word=32
-    )
-    print('第三步：从Batch的图读取邻接矩阵')
-    sym_ama, vis_ama, mapper_, data_ = read_graph(
-        start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-        mapper=mapper_, data=data_
-    )
-    start_index = mapper_['last_index'] + 1
-    gcn_layer = GraphConv(num_outputs=64)
-    input_batch = np.copy(all_input[0])
-    input_batch = np.expand_dims(input_batch, axis=0)
-    input_batch = input_batch.transpose()
-    res = gcn_layer([input_batch, sym_ama])
-    print(res)
+    data_ = '../../Data/my_personality.csv'
+    while True:
+        # 以下为训练数据生成的代码
+        print('第一步：建立Batch的图')
+        mapper_, data_ = build_graph(
+            start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
+            mapper=None, data=data_, reset=True)
+        print('第二步：读取Batch范围内的数据')
+        all_input, all_output, mapper_, data_ = read_file(
+            start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
+            mapper=mapper_, data=data_, least_words=3, most_word=32
+        )
+        print('第三步：从Batch的图读取邻接矩阵')
+        sym_ama, vis_ama, mapper_, data_ = read_graph(
+            start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
+            mapper=mapper_, data=data_
+        )
+        start_index = mapper_['last_index'] + 1
+        # todo: 把邻接矩阵sym_ama拷贝n份到一个list里，直到与all_input长度相同
+        #  打包sym_ama、all_input、all_output到一个总列表里以备保存到文件
+        #  （一个大文件比较省磁盘空间，而且IO耗时小，但是占内存）
+        #  （多个小文件占用磁盘空间大，而且IO耗时也大，但是能大幅度减轻内存占用）
+        # 以下为测试GCN计算正确性的代码
+        gcn_layer = GraphConv(num_outputs=64)
+        input_batch = np.copy(all_input[0])
+        input_batch = np.expand_dims(input_batch, axis=0)
+        input_batch = input_batch.transpose()
+        res = gcn_layer([input_batch, sym_ama])
+        print(res)
