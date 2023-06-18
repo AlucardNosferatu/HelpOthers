@@ -28,15 +28,6 @@ def model_build():
     adjacent_matrix = tf.keras.Input(shape=(256, 256))
     x = GraphConv(num_outputs=1024, activation='relu')([feature_input, adjacent_matrix])
     x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
     outputs = tf.keras.layers.Dense(5, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=[feature_input, adjacent_matrix], outputs=outputs)
     return model
@@ -98,7 +89,7 @@ if __name__ == '__main__':
     test = not train
     all_input_, all_adj_, all_output_ = data_load(new_data=False)
     if os.path.exists('ScorePredictor.h5'):
-        model_ = tf.keras.models.load_model('ScorePredictor.h5')
+        model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
     else:
         model_ = model_build()
     if train:
