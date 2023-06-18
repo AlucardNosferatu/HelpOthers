@@ -2,6 +2,7 @@ import math
 
 import jieba
 from sklearn.feature_extraction.text import TfidfVectorizer
+from tqdm import tqdm
 
 
 def cut_words():
@@ -38,18 +39,19 @@ def tf_idf_sklearn():
     return None
 
 
-def tf_idf_python(corpus):
+def tf_idf_python(corpus, word_all=None):
     weight_long = [eve.split() for eve in corpus]
-    word_all = []
-    for eve in weight_long:
-        for x in eve:
-            if len(x) > 1 or True:
-                word_all.append(x)
-    word_all = list(set(word_all))  # 集合去重词库
+    if word_all is None:
+        word_all = []
+        for eve in weight_long:
+            for x in eve:
+                if len(x) > 1 or True:
+                    word_all.append(x)
+        word_all = list(set(word_all))  # 集合去重词库
     # 开始计算tf-idf
     weight = [[] for i in corpus]
     weight_idf = [[] for i in corpus]
-    for word in word_all:
+    for word in tqdm(word_all):
         for i in range(len(corpus)):
             temp_list = corpus[i].split()
             n1 = temp_list.count(word)
@@ -63,26 +65,28 @@ def tf_idf_python(corpus):
             idf = math.log(((n2 + 1) / (n3 + 1))) + 1
             weight_idf[i].append(idf)
             weight[i].append(tf * idf)
-    print('词典为：')
-    print(word_all)
-    print('原始tf-idf值为：')
-    for w in weight:
-        print(w)
+    # print('词典为：')
+    # print(word_all)
+    # print('原始tf-idf值为：')
+    # for w in weight:
+    #     print(w)
     # L2范式归一化过程
     l2_weight = [[] for i in range(len(corpus))]
-    for e in range(len(weight)):
+    for text_index in range(len(weight)):
         all2plus = 0
-        for ev in weight[e]:
-            all2plus += ev ** 2
-        for ev in weight[e]:
-            l2_weight[e].append(ev / (all2plus ** 0.5))
-    return l2_weight  # 返回最终结果
+        for word_weight in weight[text_index]:
+            all2plus += word_weight ** 2
+        for word_weight in weight[text_index]:
+            if all2plus != 0:
+                l2_weight[text_index].append(word_weight / (all2plus ** 0.5))
+    return l2_weight, word_all
 
 
 if __name__ == '__main__':
     # tf_idf()
-    corpus = ["我 来到 中国 旅游", "中国 欢迎 你", "我 喜欢 来到 中国 天安门"]
-    result_list = tf_idf_python(corpus)
+    corpus_ = ["我 来到 中国 旅游", "中国 欢迎 你", "我 喜欢 来到 中国 天安门"]
+    tf_idf, vocab = tf_idf_python(corpus_)
     print('归一化后的tf-idf值为：')
-    for weight in result_list:
-        print(weight)
+    for weight_ in tf_idf:
+        print(vocab)
+        print(weight_)

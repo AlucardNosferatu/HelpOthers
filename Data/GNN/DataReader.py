@@ -78,7 +78,7 @@ def read_file(
     all_output = []
     for index in tqdm(range(data.shape[0])):
         row = data.iloc[index, :]
-        text = row['STATUS']
+        text = row['STATUS'].lower()
         author = row['#AUTHID']
         s_ext = row['sEXT']
         s_neu = row['sNEU']
