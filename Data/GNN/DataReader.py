@@ -1,3 +1,4 @@
+import os
 import time
 
 import nltk
@@ -8,7 +9,7 @@ from tqdm import tqdm
 from Data.GNN.GraphBuilder import build_graph
 from Data.GNN.Utils import unify_word_form, get_mapper
 from Data.NaiveDNN.DataReader import unify_symbol, extract_parenthesis
-from Model.GNN.GraphReader import read_graph
+from Data.GNN.GraphReader import read_graph
 
 nltk.download('averaged_perceptron_tagger')
 
@@ -73,7 +74,7 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
     return all_input, all_output, mapper, data
 
 
-def save_data(
+def read_data(
         vocab_size=128,
         limit_text=126,
         limit_author=2,
@@ -111,11 +112,9 @@ def save_data(
         #  （多个小文件占用磁盘空间大，而且IO耗时也大，但是能大幅度减轻内存占用）
         if len(all_input) >= stop_after:
             flag = False
-    np.save('Input.npy', np.array(all_input))
-    np.save('Output.npy', np.array(all_output))
-    np.save('AdjMat.npy', np.array(all_adj))
+    return all_input, all_adj, all_output
 
 
 if __name__ == '__main__':
-    save_data()
+    # save_data()
     print('Done')

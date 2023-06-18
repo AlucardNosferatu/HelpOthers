@@ -11,7 +11,7 @@ class GraphConv(tf.keras.layers.Layer):
         self.bias = None
         self.W = None
         self.num_outputs = num_outputs
-        self.activation_function = activation
+        self.activation = activation
 
     def build(self, input_shape):
         # Weights
@@ -22,18 +22,21 @@ class GraphConv(tf.keras.layers.Layer):
     def call(self, inputs, **kwargs):
         node_feature = inputs[0]
         adj_mat = inputs[1]
-        if self.activation_function == 'relu':
-            return tf.keras.backend.relu(
-                tf.keras.backend.dot(
-                    tf.keras.backend.dot(adj_mat, node_feature), self.W
-                ) + self.bias
-            )
+        temp = tf.keras.backend.batch_dot(node_feature, adj_mat)
+        temp = tf.keras.backend.dot(temp, self.W)
+        temp += self.bias
+        if self.activation == 'relu':
+            return tf.keras.backend.relu(temp)
         else:
-            return tf.keras.backend.sigmoid(
-                tf.keras.backend.dot(
-                    tf.keras.backend.dot(adj_mat, node_feature), self.W
-                ) + self.bias
-            )
+            return tf.keras.backend.sigmoid(temp)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "num_outputs": self.num_outputs,
+            "activation": self.activation,
+        })
+        return config
 
 
 def gcn_test(input_vector_list, adjacent_matrix):
