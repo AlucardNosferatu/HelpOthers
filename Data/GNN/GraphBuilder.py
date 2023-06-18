@@ -16,28 +16,21 @@ def clear_graph(graph=None):
 
 
 # 建立除w-w以外的关系
-def write_graph(
-        data='my_personality.csv',
-        mapper=None,
-        vocab_size=4096,
-        limit_text=2048,
-        limit_author=128,
-        reset=True
-):
-    lemmatizer = None
-    stemmer = None
-    speller = None
-    graph = Graph("bolt://localhost:7687", auth=("neo4j", "20291224"))
-    word_debug = []
-    if reset:
-        clear_graph(graph)
+def build_graph(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv', reset=True):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
         data, mapper = get_mapper(data, limit_author, limit_text, vocab_size)
-
+    print('原始数据和Batch数据已载入')
+    lemmatizer = None
+    stemmer = None
+    speller = None
+    graph = Graph("bolt://localhost:7687", auth=("neo4j", "20291224"))
+    if reset:
+        clear_graph(graph)
+        print('图数据库已清空')
     tf_idf, vocab, pmi_pairs = get_weights(lemmatizer, mapper, speller, stemmer)
-
+    print('TF-IDF和PMI计算完成')
     for index in tqdm(range(data.shape[0])):
         row = data.iloc[index, :]
         text = row['STATUS'].lower()
@@ -80,8 +73,7 @@ def write_graph(
                                 weight = {'value': tf_idf_w_in_t}
                                 wt = Relationship(word_node, "in", text_node, **weight)
                                 graph.merge(wt, 'Word', 'name')
-                                if word not in word_debug:
-                                    word_debug.append(word)
+    print('作者-文档、文档-词汇关系建立完毕')
     matcher_node = NodeMatcher(graph)
     for pmi_pair in tqdm(pmi_pairs):
         word_pair = pmi_pair[0]
@@ -93,8 +85,8 @@ def write_graph(
         weight = {'value': pmi_}
         ww = Relationship(node1, "near", node2, **weight)
         graph.merge(ww, 'Word', 'name')
-    diff = set(list(mapper['w2i'].keys())).difference(set(word_debug))
-    print(diff)
+    print('词汇-词汇关系建立完毕')
+    return mapper, data
 
 
 def get_weights(lemmatizer, mapper, speller, stemmer):
@@ -120,12 +112,4 @@ def get_weights(lemmatizer, mapper, speller, stemmer):
 
 
 if __name__ == '__main__':
-    write_graph(
-        data='../my_personality.csv',
-        mapper=None,
-        vocab_size=128,
-        limit_text=126,
-        limit_author=2,
-        reset=True
-    )
     print('Done')

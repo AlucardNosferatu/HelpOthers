@@ -11,6 +11,7 @@ pos_map = {
     'VBZ': 'v',
     'NN': 'n'
 }
+nltk.download('averaged_perceptron_tagger')
 
 
 def count_total(data='my_personality.csv', limit_text=None, limit_author=None):
@@ -58,22 +59,16 @@ def limit_vocab(text_count_list, vocab_size):
     return word2index, index2word
 
 
-def read_file(
-        data='my_personality.csv',
-        mapper=None,
-        least_words=3,
-        most_word=30,
-        vocab_size=4096,
-        limit_text=2048,
-        limit_author=128
-):
-    lemmatizer = None
-    stemmer = None
-    speller = None
+def read_file(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv', least_words=3,
+              most_word=30):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
         data, mapper = get_mapper(data, limit_author, limit_text, vocab_size)
+    print('原始数据和Batch数据已载入')
+    lemmatizer = None
+    stemmer = None
+    speller = None
     all_input = []
     all_output = []
     for index in tqdm(range(data.shape[0])):
@@ -94,9 +89,9 @@ def read_file(
             pass
         else:
             continue
-        t_index = mapper['tlist'].index(text)
         a_index = mapper['alist'].index(author)
-        a_index += len(mapper['tlist'])
+        t_index = mapper['tlist'].index(text)
+        t_index += len(mapper['alist'])
         text = unify_symbol(text)
         texts = extract_parenthesis(text)
         for text in texts:
@@ -110,18 +105,17 @@ def read_file(
                             all_output.append(score_vec)
                             embed = [0.0] * mapper['total_dim']
                             w_index = mapper['w2i'][word] - 1
-                            w_index += len(mapper['tlist'])
                             w_index += len(mapper['alist'])
+                            w_index += len(mapper['tlist'])
                             embed[t_index] = 1.0
                             embed[a_index] = 1.0
                             embed[w_index] = 1.0
                             embed_vec = np.array(embed)
                             all_input.append(embed_vec)
-                        else:
-                            print('Drop rare-used word:', word)
                     assert len(all_input) == len(all_output)
     assert len(all_input) == len(all_output)
-    return all_input, all_output
+    print('数据读取完毕，总计', len(all_input), '条')
+    return all_input, all_output, mapper, data
 
 
 def get_mapper(data, limit_author, limit_text, vocab_size):
