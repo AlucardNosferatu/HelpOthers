@@ -40,6 +40,16 @@ class GraphConv(tf.keras.layers.Layer):
             )
 
 
+def gcn_test(input_vector_list, adjacent_matrix):
+    # 以下为测试GCN计算正确性的代码
+    gcn_layer = GraphConv(num_outputs=64)
+    input_batch = np.copy(input_vector_list[0])
+    input_batch = np.expand_dims(input_batch, axis=0)
+    input_batch = input_batch.transpose()
+    res = gcn_layer([input_batch, adjacent_matrix])
+    print(res)
+
+
 if __name__ == '__main__':
     vocab_size = 128
     limit_text = 126
@@ -74,10 +84,6 @@ if __name__ == '__main__':
         # todo: 保存all_adj、all_input、all_output到文件
         #  （一个大文件比较省磁盘空间，而且IO耗时小，但是占内存）
         #  （多个小文件占用磁盘空间大，而且IO耗时也大，但是能大幅度减轻内存占用）
-        # 以下为测试GCN计算正确性的代码
-        gcn_layer = GraphConv(num_outputs=64)
-        input_batch = np.copy(batch_input[0])
-        input_batch = np.expand_dims(input_batch, axis=0)
-        input_batch = input_batch.transpose()
-        res = gcn_layer([input_batch, sym_ama])
-        print(res)
+        if len(all_input) >= 2048:
+            flag = False
+    print('Done')
