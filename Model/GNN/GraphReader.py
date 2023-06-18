@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -26,6 +28,7 @@ def read_graph(vocab_size, limit_text, limit_author, mapper=None, data='my_perso
     adj_matrix = []
     matcher_node = NodeMatcher(graph)
     matcher_rel = RelationshipMatcher(graph)
+    print('开始写入作者-文档关系到邻接矩阵')
     for i in tqdm(range(len(author_count_list))):
         adj_row = [0.0] * total_dim
         adj_row[i] = 1.0
@@ -36,7 +39,9 @@ def read_graph(vocab_size, limit_text, limit_author, mapper=None, data='my_perso
             text_index = int(text.end_node['name'])
             adj_row[text_index + text_offset] = float(text['value'])
         adj_matrix.append(adj_row)
+    time.sleep(1)
     print('作者-文档关系已写入邻接矩阵')
+    print('开始写入文档-词汇关系到邻接矩阵')
     for i in tqdm(range(len(text_count_list))):
         adj_row = [0.0] * total_dim
         adj_row[i + text_offset] = 1.0
@@ -48,7 +53,9 @@ def read_graph(vocab_size, limit_text, limit_author, mapper=None, data='my_perso
             word_index = word2index[word_str] - 1
             adj_row[word_index + word_offset] = float(word['value'])
         adj_matrix.append(adj_row)
+    time.sleep(1)
     print('文档-词汇关系已写入邻接矩阵')
+    print('开始写入词汇-词汇关系到邻接矩阵')
     for i in tqdm(range(len(list(word2index.keys())))):
         adj_row = [0.0] * total_dim
         adj_row[i + word_offset] = 1.0
@@ -60,7 +67,8 @@ def read_graph(vocab_size, limit_text, limit_author, mapper=None, data='my_perso
             word_index = word2index[word_str] - 1
             adj_row[word_index + word_offset] = float(word['value'])
         adj_matrix.append(adj_row)
-    print('词汇-词汇关系已写入邻接矩阵')
+    time.sleep(1)
+    print('词汇-词汇关系已写入邻接矩阵，邻接矩阵已装填')
     adj_matrix_array = np.array(adj_matrix)
     sym_ama = adj_matrix_array + adj_matrix_array.transpose() - np.eye(total_dim)
     print('邻接矩阵对称化已完成')

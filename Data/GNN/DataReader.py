@@ -1,3 +1,5 @@
+import time
+
 import nltk
 import numpy as np
 import pandas as pd
@@ -114,17 +116,23 @@ def read_file(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, d
                             all_input.append(embed_vec)
                     assert len(all_input) == len(all_output)
     assert len(all_input) == len(all_output)
+    time.sleep(1)
     print('数据读取完毕，总计', len(all_input), '条')
     return all_input, all_output, mapper, data
 
 
 def get_mapper(data, limit_author, limit_text, vocab_size):
+    print('提取Batch文档及作者')
     data, text_count_list, author_count_list = count_total(
         data=data,
         limit_text=limit_text,
         limit_author=limit_author
     )
+    time.sleep(1)
+    print('Batch文档及作者已提取')
+    print('提取Batch词汇')
     word2index, index2word = limit_vocab(text_count_list, vocab_size)
+    print('Batch词汇已提取')
     mapper = {
         'w2i': word2index,
         'i2w': index2word,

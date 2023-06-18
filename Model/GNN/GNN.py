@@ -10,13 +10,12 @@ from Model.GNN.GraphReader import read_graph
 
 class GraphConv(tf.keras.layers.Layer):
 
-    def __init__(self, num_outputs, adj_mat, activation="sigmoid", **kwargs):
+    def __init__(self, num_outputs, activation="sigmoid", **kwargs):
         super(GraphConv, self).__init__(**kwargs)
         self.bias = None
         self.W = None
         self.num_outputs = num_outputs
         self.activation_function = activation
-        self.adjacent_matrix = tf.Variable(adj_mat, trainable=False, dtype=tf.float32)
 
     def build(self, input_shape):
         # Weights
@@ -25,16 +24,18 @@ class GraphConv(tf.keras.layers.Layer):
         self.bias = self.add_weight("bias", shape=[self.num_outputs])
 
     def call(self, inputs, **kwargs):
+        node_feature = inputs[0]
+        adj_mat = inputs[1]
         if self.activation_function == 'relu':
             return tf.keras.backend.relu(
                 tf.keras.backend.dot(
-                    tf.keras.backend.dot(self.adjacent_matrix, inputs), self.W
+                    tf.keras.backend.dot(adj_mat, node_feature), self.W
                 ) + self.bias
             )
         else:
             return tf.keras.backend.sigmoid(
                 tf.keras.backend.dot(
-                    tf.keras.backend.dot(self.adjacent_matrix, inputs), self.W
+                    tf.keras.backend.dot(adj_mat, node_feature), self.W
                 ) + self.bias
             )
 
@@ -57,9 +58,9 @@ if __name__ == '__main__':
         vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author, mapper=mapper_,
         data=data_
     )
-    gcn_layer = GraphConv(num_outputs=64, adj_mat=sym_ama)
-    input_batch = np.copy(all_input[0, :])
+    gcn_layer = GraphConv(num_outputs=64)
+    input_batch = np.copy(all_input[0])
     input_batch = np.expand_dims(input_batch, axis=0)
     input_batch = input_batch.transpose()
-    res = gcn_layer(input_batch)
+    res = gcn_layer([input_batch, sym_ama])
     print(res)

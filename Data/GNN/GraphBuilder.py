@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 from py2neo import Graph, Node, Relationship, NodeMatcher
 from tqdm import tqdm
@@ -31,6 +33,7 @@ def build_graph(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None,
         print('图数据库已清空')
     tf_idf, vocab, pmi_pairs = get_weights(lemmatizer, mapper, speller, stemmer)
     print('TF-IDF和PMI计算完成')
+    print('开始建立作者-文档、文档-词汇关系')
     for index in tqdm(range(data.shape[0])):
         row = data.iloc[index, :]
         text = row['STATUS'].lower()
@@ -73,6 +76,7 @@ def build_graph(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None,
                                 weight = {'value': tf_idf_w_in_t}
                                 wt = Relationship(word_node, "in", text_node, **weight)
                                 graph.merge(wt, 'Word', 'name')
+    time.sleep(1)
     print('作者-文档、文档-词汇关系建立完毕')
     matcher_node = NodeMatcher(graph)
     for pmi_pair in tqdm(pmi_pairs):
@@ -85,11 +89,13 @@ def build_graph(vocab_size=4096, limit_text=2048, limit_author=128, mapper=None,
         weight = {'value': pmi_}
         ww = Relationship(node1, "near", node2, **weight)
         graph.merge(ww, 'Word', 'name')
+    time.sleep(1)
     print('词汇-词汇关系建立完毕')
     return mapper, data
 
 
 def get_weights(lemmatizer, mapper, speller, stemmer):
+    print('汇总并格式化语料')
     text_for_weight = mapper['tlist'].copy()
     text_for_weight = [unify_symbol(item) for item in text_for_weight]
     text_for_weight_ = []
@@ -105,9 +111,13 @@ def get_weights(lemmatizer, mapper, speller, stemmer):
             speller
         )
         text_for_weight_.append(item)
+    time.sleep(1)
+    print('语料已汇总')
     text_for_weight = text_for_weight_.copy()
     tf_idf, vocab = tf_idf_python(text_for_weight, word_all=list(mapper['w2i'].keys()))
+    print('TF-IDF已计算')
     pmi_pairs = pmi(text=' '.join(text_for_weight), vocab=vocab)
+    print('PMI已计算')
     return tf_idf, vocab, pmi_pairs
 
 
