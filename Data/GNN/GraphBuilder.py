@@ -1,8 +1,9 @@
 import pandas as pd
-from py2neo import Graph, Node, Relationship
+from py2neo import Graph, Node, Relationship, NodeMatcher
 from tqdm import tqdm
 
 from Data.GNN.DataReader import get_mapper, unify_word_form
+from Data.GNN.PPMI import pmi
 from Data.GNN.TF_IDF import tf_idf_python
 from Data.NaiveDNN.DataReader import unify_symbol, extract_parenthesis
 
@@ -35,7 +36,7 @@ def write_graph(
     if mapper is None:
         data, mapper = get_mapper(data, limit_author, limit_text, vocab_size)
 
-    tf_idf, vocab = get_weights(lemmatizer, mapper, speller, stemmer)
+    tf_idf, vocab, pmi_pairs = get_weights(lemmatizer, mapper, speller, stemmer)
 
     for index in tqdm(range(data.shape[0])):
         row = data.iloc[index, :]
@@ -81,8 +82,19 @@ def write_graph(
                                 graph.merge(wt, 'Word', 'name')
                                 if word not in word_debug:
                                     word_debug.append(word)
+    matcher_node = NodeMatcher(graph)
+    for pmi_pair in tqdm(pmi_pairs):
+        word_pair = pmi_pair[0]
+        word1 = word_pair[0]
+        word2 = word_pair[1]
+        pmi_ = pmi_pair[1]
+        node1 = matcher_node.match("Word", name=word1).first()
+        node2 = matcher_node.match("Word", name=word2).first()
+        weight = {'value': pmi_}
+        ww = Relationship(node1, "near", node2, **weight)
+        graph.merge(ww, 'Word', 'name')
     diff = set(list(mapper['w2i'].keys())).difference(set(word_debug))
-    print('Done')
+    print(diff)
 
 
 def get_weights(lemmatizer, mapper, speller, stemmer):
@@ -103,7 +115,8 @@ def get_weights(lemmatizer, mapper, speller, stemmer):
         text_for_weight_.append(item)
     text_for_weight = text_for_weight_.copy()
     tf_idf, vocab = tf_idf_python(text_for_weight, word_all=list(mapper['w2i'].keys()))
-    return tf_idf, vocab
+    pmi_pairs = pmi(text=' '.join(text_for_weight), vocab=vocab)
+    return tf_idf, vocab, pmi_pairs
 
 
 if __name__ == '__main__':

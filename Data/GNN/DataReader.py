@@ -156,7 +156,7 @@ def unify_word_form(text, lemmatizer=None, stemmer=None, speller=None):
         word = words[j]
         if word_pos[j][1] in ['VBZ', 'NN']:
             word = lemmatizer.lemmatize(word, pos_map[word_pos[j][1]])
-        word = stemmer.stem(word)
+        # word = stemmer.stem(word)
         words[j] = word
     text = ' '.join(words)
     return text, lemmatizer, stemmer, speller
