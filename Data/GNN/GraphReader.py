@@ -14,6 +14,7 @@ def read_graph(start_index, vocab_size, limit_text, limit_author, mapper=None, d
     if mapper is None:
         data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size)
     print('原始数据和Batch数据已载入')
+    # GUOER: use 'bolt://server.natappfree.cc:42148' auth=('GUOER','Your QQ Number')
     graph = Graph("bolt://localhost:7687", auth=("neo4j", "20291224"))
     word2index = mapper['w2i']
     index2word = mapper['i2w']

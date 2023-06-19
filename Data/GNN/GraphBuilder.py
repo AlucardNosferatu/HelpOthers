@@ -12,6 +12,7 @@ from Data.NaiveDNN.DataReader import unify_symbol, extract_parenthesis
 
 def clear_graph(graph=None):
     if graph is None:
+        # GUOER: use 'bolt://server.natappfree.cc:42148' auth=('GUOER','Your QQ Number')
         graph = Graph("bolt://localhost:7687", auth=("neo4j", "20291224"))
     graph.run('match (n1)-[r]-(n2) delete n1,r,n2')
     graph.run('match (n1) delete n1')
@@ -28,6 +29,7 @@ def build_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128,
     lemmatizer = None
     stemmer = None
     speller = None
+    # GUOER: use 'bolt://server.natappfree.cc:42148' auth=('GUOER','Your QQ Number')
     graph = Graph("bolt://localhost:7687", auth=("neo4j", "20291224"))
     if reset:
         clear_graph(graph)
