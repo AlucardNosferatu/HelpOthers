@@ -5,13 +5,12 @@ import numpy as np
 import tensorflow as tf
 
 from Data.GNN.DataReader import read_data
-from Data.NaiveDNN.DataReader import unify_symbol, extract_parenthesis
 from Model.GNN.GNN import GraphConv
 
 
-def data_load(new_data=False):
+def data_load(new_data=False, stop_after=8192):
     if new_data:
-        all_input, all_adj, all_output = read_data()
+        all_input, all_adj, all_output = read_data(stop_after=stop_after)
         np.save('../../Data/GNN/Input.npy', np.array(all_input))
         np.save('../../Data/GNN/Output.npy', np.array(all_output))
         np.save('../../Data/GNN/AdjMat.npy', np.array(all_adj))
@@ -81,7 +80,7 @@ def model_test(model, all_input, all_adj, all_output):
 if __name__ == '__main__':
     train = False
     test = not train
-    all_input_, all_adj_, all_output_ = data_load(new_data=False)
+    all_input_, all_adj_, all_output_ = data_load(new_data=True)
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
     else:
