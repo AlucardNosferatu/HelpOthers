@@ -112,5 +112,5 @@ def read_data(
 
 
 if __name__ == '__main__':
-    # save_data()
+    read_data(stop_after=8192)
     print('Done')
