@@ -108,6 +108,8 @@ def read_data(
         #  （多个小文件占用磁盘空间大，而且IO耗时也大，但是能大幅度减轻内存占用）
         if len(all_input) >= stop_after:
             flag = False
+        time.sleep(1)
+        print('数据已采集：', len(all_input), '/', stop_after)
     return all_input, all_adj, all_output
 
 
