@@ -71,9 +71,9 @@ def model_test(model, all_input, all_adj, all_output):
         adjacent_mat = np.expand_dims(all_adj[index], axis=0)
         score = [score * 5 for score in all_output[index]]
         res = model.predict([text_feature, adjacent_mat]) * 5
-        print('pred:', res.tolist()[0])
-        print('true:', score)
-        print('diff:', np.array(score) - res[0, :])
+        print('pred:', ['{:.4f}'.format(val) for val in res.tolist()[0]])
+        print('true:', ['{:.4f}'.format(val) for val in score])
+        print('diff:', ['{:.4f}'.format(val) for val in np.array(score) - res[0, :]])
         cmd = ''
         while cmd not in ['y', 'n']:
             cmd = input('continue?:y/n\n')
@@ -81,7 +81,7 @@ def model_test(model, all_input, all_adj, all_output):
 
 
 if __name__ == '__main__':
-    train = True
+    train = False
     test = not train
     all_input_, all_adj_, all_output_ = data_load(new_data=False)
     if os.path.exists('ScorePredictor.h5'):
