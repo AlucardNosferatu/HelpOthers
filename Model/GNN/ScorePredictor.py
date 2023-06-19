@@ -64,6 +64,15 @@ def model_train(model, all_input, all_adj, all_output):
 
 
 def model_test(model, all_input, all_adj, all_output):
+    def form_str(score_list):
+        str_list = []
+        for val in score_list:
+            if val > 0:
+                str_list.append('+{:.4f}'.format(val))
+            else:
+                str_list.append('{:.4f}'.format(val))
+        return str_list
+
     flag = True
     while flag:
         index = random.choice(list(range(len(all_input))))
@@ -71,9 +80,12 @@ def model_test(model, all_input, all_adj, all_output):
         adjacent_mat = np.expand_dims(all_adj[index], axis=0)
         score = [score * 5 for score in all_output[index]]
         res = model.predict([text_feature, adjacent_mat]) * 5
-        print('pred:', ['{:.4f}'.format(val) for val in res.tolist()[0]])
-        print('true:', ['{:.4f}'.format(val) for val in score])
-        print('diff:', ['{:.4f}'.format(val) for val in np.array(score) - res[0, :]])
+        pred = form_str(res.tolist()[0])
+        true = form_str(score)
+        diff = form_str((np.array(score) - res[0, :]).tolist())
+        print('pred:', pred)
+        print('true:', true)
+        print('diff:', diff)
         cmd = ''
         while cmd not in ['y', 'n']:
             cmd = input('continue?:y/n\n')
