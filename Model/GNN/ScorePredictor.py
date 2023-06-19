@@ -28,16 +28,16 @@ def model_build():
     feature_input = tf.keras.Input(shape=(256,))
     adjacent_matrix = tf.keras.Input(shape=(256, 256))
     x = GraphConv(num_outputs=256, activation='relu')([feature_input, adjacent_matrix])
-    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
-    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
-    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
-    x = tf.keras.layers.Dense(512, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = tf.keras.layers.BatchNormalization()(x)
     outputs = tf.keras.layers.Dense(5, activation=tf.nn.sigmoid)(x)
@@ -50,7 +50,7 @@ def model_train(model, all_input, all_adj, all_output):
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-7),
         loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy'],
-        run_eagerly=True
+        # run_eagerly=True
     )
     ckpt = tf.keras.callbacks.ModelCheckpoint(
         filepath='ScorePredictor.h5',
@@ -93,7 +93,7 @@ def model_test(model, all_input, all_adj, all_output):
 
 
 if __name__ == '__main__':
-    train = False
+    train = True
     test = not train
     all_input_, all_adj_, all_output_ = data_load(new_data=False)
     if os.path.exists('ScorePredictor.h5'):
