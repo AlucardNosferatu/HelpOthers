@@ -1,7 +1,4 @@
-import nltk
 from nltk import word_tokenize, BigramAssocMeasures, BigramCollocationFinder
-
-nltk.download('punkt')
 
 
 def pmi(

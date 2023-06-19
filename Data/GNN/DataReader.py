@@ -1,17 +1,13 @@
-import os
 import time
 
-import nltk
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
 from Data.GNN.GraphBuilder import build_graph
+from Data.GNN.GraphReader import read_graph
 from Data.GNN.Utils import unify_word_form, get_mapper
 from Data.NaiveDNN.DataReader import unify_symbol, extract_parenthesis
-from Data.GNN.GraphReader import read_graph
-
-nltk.download('averaged_perceptron_tagger')
 
 
 def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv',
