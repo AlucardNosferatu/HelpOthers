@@ -93,7 +93,7 @@ def model_test(model, all_input, all_adj, all_output):
 
 
 if __name__ == '__main__':
-    train = True
+    train = False
     test = not train
     all_input_, all_adj_, all_output_ = data_load(new_data=False)
     if os.path.exists('ScorePredictor.h5'):
