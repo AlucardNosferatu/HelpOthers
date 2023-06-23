@@ -16,5 +16,5 @@ def encoder_bert(a_index, mapper, t_index, graph):
 
 
 if __name__ == '__main__':
-    all_input, all_adj, all_output=read_data(stop_after=64, embed_level='graph', embed_encoder=encoder_bert)
-
+    all_input, all_adj, all_output = read_data(stop_after=64, embed_level='graph', embed_encoder=encoder_bert)
+    print('Done')
