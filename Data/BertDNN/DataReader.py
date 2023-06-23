@@ -3,7 +3,7 @@ import pandas as pd
 
 from tqdm import tqdm
 
-from Model.NaiveDNN.TextEncoder import tokenize, build_processor
+from Model.BertDNN.Bert import tokenize, build_processor
 
 
 def unify_symbol(text):

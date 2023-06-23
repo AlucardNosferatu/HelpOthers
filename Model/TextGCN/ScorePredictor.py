@@ -4,8 +4,8 @@ import random
 import numpy as np
 import tensorflow as tf
 
-from Data.GNN.DataReader import read_data
-from Model.GNN.GNN import GraphConv
+from Data.TextGCN.DataReader import read_data
+from Model.TextGCN.GNN import GraphConv
 
 
 def data_load(new_data=False, stop_after=8192):
@@ -14,13 +14,13 @@ def data_load(new_data=False, stop_after=8192):
         all_input = np.array(all_input)
         all_output = np.array(all_output)
         all_adj = np.array(all_adj)
-        np.save('../../Data/GNN/Input.npy', all_input)
-        np.save('../../Data/GNN/Output.npy', all_output)
-        np.save('../../Data/GNN/AdjMat.npy', all_adj)
+        np.save('../../Data/TextGCN/Input.npy', all_input)
+        np.save('../../Data/TextGCN/Output.npy', all_output)
+        np.save('../../Data/TextGCN/AdjMat.npy', all_adj)
     else:
-        all_input = np.load('../../Data/GNN/Input.npy')
-        all_output = np.load('../../Data/GNN/Output.npy')
-        all_adj = np.load('../../Data/GNN/AdjMat.npy')
+        all_input = np.load('../../Data/TextGCN/Input.npy')
+        all_output = np.load('../../Data/TextGCN/Output.npy')
+        all_adj = np.load('../../Data/TextGCN/AdjMat.npy')
     return all_input, all_adj, all_output
 
 
@@ -58,7 +58,7 @@ def model_train(model, all_input, all_adj, all_output):
         verbose=1,
         save_best_only=True,
     )
-    tf.keras.utils.plot_model(model, 'GCN.png', show_shapes=True, expand_nested=True, show_layer_activations=True)
+    tf.keras.utils.plot_model(model, 'TextGCN.png', show_shapes=True, expand_nested=True, show_layer_activations=True)
     with tf.device('/cpu:0'):
         model.fit(x=[all_input, all_adj], y=all_output, batch_size=2048, epochs=10000, callbacks=[ckpt], shuffle=True)
 

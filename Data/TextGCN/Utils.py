@@ -6,7 +6,7 @@ from autocorrect import Speller
 from nltk import WordNetLemmatizer, PorterStemmer, pos_tag
 from tqdm import tqdm
 
-from Data.NaiveDNN.DataReader import unify_symbol, extract_parenthesis
+from Data.BertDNN.DataReader import unify_symbol, extract_parenthesis
 
 pos_map = {
     'VBZ': 'v',

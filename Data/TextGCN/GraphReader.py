@@ -5,7 +5,7 @@ import pandas as pd
 from py2neo import Graph, NodeMatcher, RelationshipMatcher
 from tqdm import tqdm
 
-from Data.GNN.Utils import get_mapper
+from Data.TextGCN.Utils import get_mapper
 
 
 def read_graph(start_index, vocab_size, limit_text, limit_author, mapper=None, data='my_personality.csv'):

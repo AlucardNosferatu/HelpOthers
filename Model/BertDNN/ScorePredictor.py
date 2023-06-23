@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from Data.NaiveDNN.DataReader import read_file, unify_symbol, extract_parenthesis
-from TextEncoder import build_processor, tokenize
+from Data.BertDNN.DataReader import read_file, unify_symbol, extract_parenthesis
+from Bert import build_processor, tokenize
 
 
 def data_load(new_data=False):
@@ -14,11 +14,11 @@ def data_load(new_data=False):
         all_input, all_output = read_file(tokenize_batch=64)
         all_input = np.array(all_input)
         all_output = np.array(all_output)
-        np.save('../../Data/NaiveDNN/Input.npy', all_input)
-        np.save('../../Data/NaiveDNN/Output.npy', all_output)
+        np.save('../../Data/BertDNN/Input.npy', all_input)
+        np.save('../../Data/BertDNN/Output.npy', all_output)
     else:
-        all_input = np.load('../../Data/NaiveDNN/Input.npy')
-        all_output = np.load('../../Data/NaiveDNN/Output.npy')
+        all_input = np.load('../../Data/BertDNN/Input.npy')
+        all_output = np.load('../../Data/BertDNN/Output.npy')
     return all_input, all_output
 
 

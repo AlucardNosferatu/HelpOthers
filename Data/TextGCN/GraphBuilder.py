@@ -4,10 +4,10 @@ import pandas as pd
 from py2neo import Graph, Node, Relationship, NodeMatcher
 from tqdm import tqdm
 
-from Data.GNN.Utils import unify_word_form, get_mapper
-from Data.GNN.PPMI import pmi
-from Data.GNN.TF_IDF import tf_idf_python
-from Data.NaiveDNN.DataReader import unify_symbol, extract_parenthesis
+from Data.TextGCN.Utils import unify_word_form, get_mapper
+from Data.TextGCN.PPMI import pmi
+from Data.TextGCN.TF_IDF import tf_idf_python
+from Data.BertDNN.DataReader import unify_symbol, extract_parenthesis
 
 
 def clear_graph(graph=None):
