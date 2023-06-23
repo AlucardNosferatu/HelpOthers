@@ -8,7 +8,7 @@ from Data.TextGCN.DataReader import read_data, encoder_onehot
 from Model.TextGCN.GNN import GraphConv
 
 
-def data_load(new_data=False, stop_after=8192, embed_level='word', embed_encoder=encoder_onehot):
+def data_load(new_data=False, stop_after=8192, embed_level='word', embed_encoder=encoder_onehot, data_folder='TextGCN'):
     if new_data:
         all_input, all_adj, all_output = read_data(
             data_='../../Data/my_personality.csv',
@@ -19,13 +19,13 @@ def data_load(new_data=False, stop_after=8192, embed_level='word', embed_encoder
         all_input = np.array(all_input)
         all_output = np.array(all_output)
         all_adj = np.array(all_adj)
-        np.save('../../Data/TextGCN/Input.npy', all_input)
-        np.save('../../Data/TextGCN/Output.npy', all_output)
-        np.save('../../Data/TextGCN/AdjMat.npy', all_adj)
+        np.save('../../Data/{}/Input.npy'.format(data_folder), all_input)
+        np.save('../../Data/{}/Output.npy'.format(data_folder), all_output)
+        np.save('../../Data/{}/AdjMat.npy'.format(data_folder), all_adj)
     else:
-        all_input = np.load('../../Data/TextGCN/Input.npy')
-        all_output = np.load('../../Data/TextGCN/Output.npy')
-        all_adj = np.load('../../Data/TextGCN/AdjMat.npy')
+        all_input = np.load('../../Data/{}/Input.npy'.format(data_folder))
+        all_output = np.load('../../Data/{}/Output.npy'.format(data_folder))
+        all_adj = np.load('../../Data/{}/AdjMat.npy'.format(data_folder))
     return all_input, all_adj, all_output
 
 
