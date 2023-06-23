@@ -4,13 +4,18 @@ import random
 import numpy as np
 import tensorflow as tf
 
-from Data.TextGCN.DataReader import read_data
+from Data.TextGCN.DataReader import read_data, encoder_onehot
 from Model.TextGCN.GNN import GraphConv
 
 
-def data_load(new_data=False, stop_after=8192):
+def data_load(new_data=False, stop_after=8192, embed_level='word', embed_encoder=encoder_onehot):
     if new_data:
-        all_input, all_adj, all_output = read_data(data_='../../Data/my_personality.csv', stop_after=stop_after)
+        all_input, all_adj, all_output = read_data(
+            data_='../../Data/my_personality.csv',
+            stop_after=stop_after,
+            embed_level=embed_level,
+            embed_encoder=embed_encoder
+        )
         all_input = np.array(all_input)
         all_output = np.array(all_output)
         all_adj = np.array(all_adj)
@@ -24,8 +29,9 @@ def data_load(new_data=False, stop_after=8192):
     return all_input, all_adj, all_output
 
 
-def model_build():
-    feature_input = tf.keras.Input(shape=(256,))
+def model_build(feature_input=None):
+    if feature_input is None:
+        feature_input = tf.keras.Input(shape=(256,))
     adjacent_matrix = tf.keras.Input(shape=(256, 256))
     x = GraphConv(num_outputs=256, activation='relu')([feature_input, adjacent_matrix])
     x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)

@@ -37,6 +37,7 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
     graph_batch = []
     prev_author = None
     row_pad = 0
+    prev_score = None
     for index in tqdm(range(start_index, data.shape[0])):
         row = data.iloc[index, :]
         text = row['STATUS'].lower()
@@ -51,11 +52,14 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
             pass
         else:
             continue
-        if author in mapper['alist']:
-            pass
+        if author in mapper['alist'] or embed_level == 'graph':
+            if author in mapper['alist']:
+                a_index = mapper['alist'].index(author)
+            else:
+                a_index = None
         else:
+            assert embed_level in ['word', 'text']
             continue
-        a_index = mapper['alist'].index(author)
         t_index = mapper['tlist'].index(text)
         t_index += len(mapper['alist'])
         text = unify_symbol(text)
@@ -78,6 +82,7 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
             if prev_author == author:
                 # insert text node
                 graph_batch.insert(-vocab_size, embed_vec)
+                prev_score = score
             else:
                 same_author = False
                 prev_author = author
@@ -88,13 +93,15 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
                     temp += 1
                 row_pad = limit_text - temp
             if len(graph_batch) >= mapper['total_dim']:
-                score_vec = np.array(score)
-                all_output.append(score_vec)
                 all_input.append(graph_batch.copy())
                 while len(graph_batch) > limit_author + vocab_size:
                     graph_batch.pop(-vocab_size - 1)
                 if not same_author:
                     graph_batch.insert(-vocab_size, embed_vec)
+                    score_vec = np.array(prev_score)
+                else:
+                    score_vec = np.array(score)
+                all_output.append(score_vec)
         else:
             texts = extract_parenthesis(text)
             for text in texts:
