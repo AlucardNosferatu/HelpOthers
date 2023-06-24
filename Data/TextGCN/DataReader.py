@@ -23,8 +23,31 @@ def encoder_onehot(a_index, mapper, t_index, word):
     return embed_vec
 
 
-def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv',
-              least_words=3, most_word=30, embed_level='word', embed_encoder=encoder_onehot):
+def read_row(data, index):
+    row = data.iloc[index, :]
+    text = row['STATUS'].lower()
+    author = row['#AUTHID']
+    s_ext = row['sEXT']
+    s_neu = row['sNEU']
+    s_agr = row['sAGR']
+    s_con = row['sCON']
+    s_opn = row['sOPN']
+    score = [s_ext / 5, s_neu / 5, s_agr / 5, s_con / 5, s_opn / 5]
+    return author, score, text
+
+
+def read_file(
+        start_index,
+        vocab_size=4096,
+        limit_text=2048,
+        limit_author=128,
+        mapper=None,
+        data='my_personality.csv',
+        least_words=3,
+        most_word=30,
+        embed_level='word',
+        embed_encoder=encoder_onehot
+):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
@@ -38,7 +61,7 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
     graph_batch = []
     prev_author = None
     prev_score = None
-    for index in tqdm(range(start_index, data.shape[0])):
+    for index in tqdm(range(start_index, min(start_index + limit_text, data.shape[0]))):
         author, score, text = read_row(data, index)
         if prev_author is None:
             prev_author = author
@@ -107,23 +130,14 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
                             )
                     assert len(all_input) == len(all_output)
         assert len(all_input) == len(all_output)
+    if embed_level == 'graph':
+        assert graph_batch[-vocab_size - 1] != [0.0] * mapper['total_dim']
+        all_input.append(graph_batch.copy())
+        all_output.append(np.array(prev_score))
     assert len(all_input) == len(all_output)
     time.sleep(1)
     print('数据读取完毕，总计', len(all_input), '条')
     return all_input, all_output, mapper, data
-
-
-def read_row(data, index):
-    row = data.iloc[index, :]
-    text = row['STATUS'].lower()
-    author = row['#AUTHID']
-    s_ext = row['sEXT']
-    s_neu = row['sNEU']
-    s_agr = row['sAGR']
-    s_con = row['sCON']
-    s_opn = row['sOPN']
-    score = [s_ext / 5, s_neu / 5, s_agr / 5, s_con / 5, s_opn / 5]
-    return author, score, text
 
 
 def read_data(
@@ -131,7 +145,7 @@ def read_data(
         limit_text=126,
         limit_author=2,
         start_index=0,
-        data_='../my_personality.csv',
+        data='../my_personality.csv',
         stop_after=2048,
         read_file_action=read_file,
         embed_level='word',
@@ -146,19 +160,19 @@ def read_data(
     while flag:
         # 以下为训练数据生成的代码
         print('第一步：建立Batch的图')
-        mapper_, data_ = build_graph(
+        mapper, data = build_graph(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-            mapper=None, data=data_, reset=True)
+            mapper=None, data=data, reset=True)
         print('第二步：读取Batch范围内的数据')
-        batch_input, batch_output, mapper_, data_ = read_file_action(
+        batch_input, batch_output, mapper, data = read_file_action(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-            mapper=mapper_, data=data_, least_words=3, most_word=32, embed_level=embed_level,
+            mapper=mapper, data=data, least_words=3, most_word=32, embed_level=embed_level,
             embed_encoder=embed_encoder
         )
         print('第三步：从Batch的图读取邻接矩阵')
-        sym_ama, vis_ama, mapper_, data_ = read_graph(
+        sym_ama, vis_ama, mapper, data = read_graph(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-            mapper=mapper_, data=data_
+            mapper=mapper, data=data
         )
         sym_ama_list = [sym_ama for _ in batch_input]
         batch_start_index = batch_count
@@ -175,7 +189,7 @@ def read_data(
             all_adj += sym_ama_list.copy()
             all_input += batch_input.copy()
             all_output += batch_output.copy()
-        start_index = mapper_['last_index'] + 1
+        start_index = mapper['last_index'] + 1
         if batch_count >= stop_after:
             flag = False
         time.sleep(1)

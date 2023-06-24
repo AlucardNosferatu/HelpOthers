@@ -37,7 +37,7 @@ def build_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128,
     tf_idf, vocab, pmi_pairs = get_weights(mapper, lemmatizer, speller, stemmer)
     print('TF-IDF和PMI计算完成')
     print('开始建立作者-文档、文档-词汇关系')
-    for index in tqdm(range(start_index, data.shape[0])):
+    for index in tqdm(range(start_index, min(start_index + limit_text, data.shape[0]))):
         row = data.iloc[index, :]
         text = row['STATUS'].lower()
         author = row['#AUTHID']
