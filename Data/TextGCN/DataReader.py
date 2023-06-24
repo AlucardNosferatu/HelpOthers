@@ -60,7 +60,7 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
         text = unify_symbol(text)
         if embed_level == 'graph':
             # matrix_order = 'author' + 'text' + 'word'
-            # author & word node
+
             text, lemmatizer, stemmer, speller = unify_word_form(
                 text, lemmatizer, stemmer, speller
             )
