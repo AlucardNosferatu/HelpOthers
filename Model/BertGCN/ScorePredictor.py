@@ -20,6 +20,7 @@ if __name__ == '__main__':
         save_by_batch=True,
         bert_dim=bert_dim,
         binary_label=False
+        # 切换yes/no或者分数数据
     )
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
