@@ -20,8 +20,8 @@ if __name__ == '__main__':
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
     else:
-        model_ = model_build(feature_input=tf.keras.Input(shape=(256, None)))
+        model_ = model_build(feature_input=tf.keras.Input(shape=(8, 256)))
     if train:
-        model_train(model_, all_input_, None, None)
+        model_train(model_, all_input_, None, None, use_generator=True, batch_size=8, gen_files_count=16)
     if test:
-        model_test(model_, all_input_, None, None)
+        model_test(model_, all_input_, None, None, use_generator=True, gen_files_count=8192)

@@ -82,7 +82,7 @@ def limit_vocab(text_count_list, vocab_size):
     return word2index, index2word
 
 
-def get_mapper(start_index, data, limit_author, limit_text, vocab_size):
+def get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim=8):
     print('提取Batch文档及作者')
     data, text_count_list, author_count_list, last_index = count_total(start_index, data=data, limit_text=limit_text,
                                                                        limit_author=limit_author)
@@ -97,6 +97,7 @@ def get_mapper(start_index, data, limit_author, limit_text, vocab_size):
         'tlist': text_count_list,
         'alist': author_count_list,
         'total_dim': len(author_count_list) + len(text_count_list) + vocab_size,
-        'last_index': last_index
+        'last_index': last_index,
+        'bert_dim': bert_dim
     }
     return data, mapper

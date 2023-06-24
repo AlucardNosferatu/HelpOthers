@@ -90,15 +90,15 @@ def read_file(
             embed_vec = embed_encoder(a_index, mapper, t_index, text)
             if prev_author != author:
                 assert len(graph_batch) >= mapper['total_dim']
-                all_input.append(graph_batch.copy())
+                all_input.append(np.array(graph_batch.copy()).transpose())
                 all_output.append(np.array(prev_score))
                 graph_batch.clear()
             while len(graph_batch) < limit_author:
-                graph_batch.append([1.0] * mapper['total_dim'])
+                graph_batch.append([1.0] * mapper['bert_dim'])
             while len(graph_batch) < limit_author + limit_text:
-                graph_batch.append([0.0] * mapper['total_dim'])
+                graph_batch.append([0.0] * mapper['bert_dim'])
             while len(graph_batch) < mapper['total_dim']:
-                graph_batch.append([1.0] * mapper['total_dim'])
+                graph_batch.append([1.0] * mapper['bert_dim'])
             graph_batch[t_index] = embed_vec
             prev_author = author
             prev_score = score
@@ -182,9 +182,18 @@ def read_data(
         #  （多个小文件占用磁盘空间大，而且IO耗时也大，但是能大幅度减轻内存占用）
         if save_by_batch is not None:
             for i in range(len(batch_input)):
-                np.save(os.path.join(save_by_batch, 'AdjMat_{}.npy'.format(batch_start_index + i)), sym_ama_list[i])
-                np.save(os.path.join(save_by_batch, 'Input_{}.npy'.format(batch_start_index + i)), batch_input[i])
-                np.save(os.path.join(save_by_batch, 'Output_{}.npy'.format(batch_start_index + i)), batch_output[i])
+                np.save(
+                    os.path.join(save_by_batch, 'AdjMat_{}.npy'.format(batch_start_index + i)),
+                    np.array(sym_ama_list[i])
+                )
+                np.save(
+                    os.path.join(save_by_batch, 'Input_{}.npy'.format(batch_start_index + i)),
+                    np.array(batch_input[i])
+                )
+                np.save(
+                    os.path.join(save_by_batch, 'Output_{}.npy'.format(batch_start_index + i)),
+                    np.array(batch_output[i])
+                )
         else:
             all_adj += sym_ama_list.copy()
             all_input += batch_input.copy()

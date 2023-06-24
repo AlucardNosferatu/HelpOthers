@@ -65,6 +65,7 @@ def model_build(feature_input=None):
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
     x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.Flatten()(x)
     x = tf.keras.layers.BatchNormalization()(x)
     outputs = tf.keras.layers.Dense(5, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=[feature_input, adjacent_matrix], outputs=outputs)
@@ -150,6 +151,6 @@ if __name__ == '__main__':
     else:
         model_ = model_build()
     if train:
-        model_train(model_, all_input_, all_adj_, all_output_, use_generator=True, batch_size=8, gen_files_count=8192)
+        model_train(model_, all_input_, all_adj_, all_output_)
     if test:
-        model_test(model_, all_input_, all_adj_, all_output_, use_generator=True, gen_files_count=8192)
+        model_test(model_, all_input_, all_adj_, all_output_)
