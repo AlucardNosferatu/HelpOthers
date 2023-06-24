@@ -20,11 +20,11 @@ def clear_graph(graph=None):
 
 # 建立除w-w以外的关系
 def build_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv',
-                reset=True):
+                reset=True, bert_dim=8):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size)
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim)
     print('原始数据和Batch数据已载入')
     lemmatizer = None
     stemmer = None

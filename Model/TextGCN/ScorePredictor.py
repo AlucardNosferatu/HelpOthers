@@ -31,7 +31,8 @@ def data_load(
             embed_encoder=embed_encoder,
             save_by_batch=batch_saving_dir,
             bert_dim=bert_dim,
-            binary_label=binary_label
+            binary_label=binary_label,
+            # start_index=9751
         )
         if not save_by_batch:
             all_input = np.array(all_input)
@@ -80,7 +81,7 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-7),
         loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy'],
-        # run_eagerly=True
+        run_eagerly=True
     )
     ckpt = tf.keras.callbacks.ModelCheckpoint(
         filepath='ScorePredictor.h5',

@@ -10,7 +10,7 @@ if __name__ == '__main__':
     train = True
     test = not train
     bert_dim = 32
-    files_count = 8192
+    files_count = 326
     all_input_, _, _ = data_load(
         new_data=True,
         stop_after=files_count,

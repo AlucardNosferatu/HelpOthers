@@ -175,7 +175,7 @@ def read_data(
         print('第一步：建立Batch的图')
         mapper, data = build_graph(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-            mapper=None, data=data, reset=True)
+            mapper=None, data=data, reset=True, bert_dim=bert_dim)
         print('第二步：读取Batch范围内的数据')
         batch_input, batch_output, mapper, data = read_file_action(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
