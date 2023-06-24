@@ -11,7 +11,7 @@ if __name__ == '__main__':
     test = not train
     all_input_, _, _ = data_load(
         new_data=True,
-        stop_after=4,
+        stop_after=16,
         embed_level='graph',
         embed_encoder=encoder_bert,
         data_folder='BertGCN',

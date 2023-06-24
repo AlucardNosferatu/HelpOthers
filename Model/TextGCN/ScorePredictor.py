@@ -28,7 +28,7 @@ def data_load(
             embed_level=embed_level,
             embed_encoder=embed_encoder,
             save_by_batch=batch_saving_dir,
-            start_index=252
+            # start_index=252
         )
         if not save_by_batch:
             all_input = np.array(all_input)
