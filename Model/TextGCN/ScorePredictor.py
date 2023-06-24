@@ -93,7 +93,8 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
                 x=x_gen,
                 epochs=10000,
                 callbacks=[ckpt],
-                shuffle=True
+                shuffle=True,
+                steps_per_epoch=20
             )
         else:
             model.fit(

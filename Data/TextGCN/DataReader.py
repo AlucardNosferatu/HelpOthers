@@ -132,7 +132,7 @@ def read_file(
         assert len(all_input) == len(all_output)
     if embed_level == 'graph':
         assert graph_batch[-vocab_size - 1] != [0.0] * mapper['total_dim']
-        all_input.append(graph_batch.copy())
+        all_input.append(np.array(graph_batch.copy()).transpose())
         all_output.append(np.array(prev_score))
     assert len(all_input) == len(all_output)
     time.sleep(1)

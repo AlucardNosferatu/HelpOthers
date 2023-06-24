@@ -10,7 +10,7 @@ if __name__ == '__main__':
     train = True
     test = not train
     all_input_, _, _ = data_load(
-        new_data=True,
+        new_data=False,
         stop_after=16,
         embed_level='graph',
         embed_encoder=encoder_bert,
