@@ -1,3 +1,4 @@
+import os
 import time
 
 import numpy as np
@@ -36,72 +37,48 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
     all_output = []
     graph_batch = []
     prev_author = None
-    row_pad = 0
     prev_score = None
     for index in tqdm(range(start_index, data.shape[0])):
-        row = data.iloc[index, :]
-        text = row['STATUS'].lower()
-        author = row['#AUTHID']
-        s_ext = row['sEXT']
-        s_neu = row['sNEU']
-        s_agr = row['sAGR']
-        s_con = row['sCON']
-        s_opn = row['sOPN']
-        score = [s_ext / 5, s_neu / 5, s_agr / 5, s_con / 5, s_opn / 5]
+        author, score, text = read_row(data, index)
+        if prev_author is None:
+            prev_author = author
+        if prev_score is None:
+            prev_score = score
         if text in mapper['tlist']:
             pass
         else:
             continue
-        if author in mapper['alist'] or embed_level == 'graph':
-            if author in mapper['alist']:
-                a_index = mapper['alist'].index(author)
-            else:
-                a_index = None
+        if author in mapper['alist']:
+            a_index = mapper['alist'].index(author)
         else:
-            assert embed_level in ['word', 'text']
-            continue
+            a_index = None
+            if embed_level != 'graph':
+                assert embed_level in ['text', 'word']
+                continue
         t_index = mapper['tlist'].index(text)
         t_index += len(mapper['alist'])
         text = unify_symbol(text)
         if embed_level == 'graph':
-            if prev_author is None:
-                prev_author = author
             # matrix_order = 'author' + 'text' + 'word'
             # author & word node
-            while len(graph_batch) < limit_author + vocab_size:
-                graph_batch.append([1.0] * mapper['total_dim'])
-            for i in range(row_pad):
-                graph_batch.insert(-vocab_size - 1, [0.0] * mapper['total_dim'])
-                if i == row_pad - 1:
-                    row_pad = 0
             text, lemmatizer, stemmer, speller = unify_word_form(
                 text, lemmatizer, stemmer, speller
             )
             embed_vec = embed_encoder(a_index, mapper, t_index, text)
-            same_author = True
-            if prev_author == author:
-                # insert text node
-                graph_batch.insert(-vocab_size, embed_vec)
-                prev_score = score
-            else:
-                same_author = False
-                prev_author = author
-                # pad text node
-                temp = 0
-                while len(graph_batch) < mapper['total_dim']:
-                    graph_batch.insert(-vocab_size, [0.0] * mapper['total_dim'])
-                    temp += 1
-                row_pad = limit_text - temp
-            if len(graph_batch) >= mapper['total_dim']:
+            if prev_author != author:
+                assert len(graph_batch) >= mapper['total_dim']
                 all_input.append(graph_batch.copy())
-                while len(graph_batch) > limit_author + vocab_size:
-                    graph_batch.pop(-vocab_size - 1)
-                if not same_author:
-                    graph_batch.insert(-vocab_size, embed_vec)
-                    score_vec = np.array(prev_score)
-                else:
-                    score_vec = np.array(score)
-                all_output.append(score_vec)
+                all_output.append(np.array(prev_score))
+                graph_batch.clear()
+            while len(graph_batch) < limit_author:
+                graph_batch.append([1.0] * mapper['total_dim'])
+            while len(graph_batch) < limit_author + limit_text:
+                graph_batch.append([0.0] * mapper['total_dim'])
+            while len(graph_batch) < mapper['total_dim']:
+                graph_batch.append([1.0] * mapper['total_dim'])
+            graph_batch[t_index] = embed_vec
+            prev_author = author
+            prev_score = score
         else:
             texts = extract_parenthesis(text)
             for text in texts:
@@ -136,6 +113,19 @@ def read_file(start_index, vocab_size=4096, limit_text=2048, limit_author=128, m
     return all_input, all_output, mapper, data
 
 
+def read_row(data, index):
+    row = data.iloc[index, :]
+    text = row['STATUS'].lower()
+    author = row['#AUTHID']
+    s_ext = row['sEXT']
+    s_neu = row['sNEU']
+    s_agr = row['sAGR']
+    s_con = row['sCON']
+    s_opn = row['sOPN']
+    score = [s_ext / 5, s_neu / 5, s_agr / 5, s_con / 5, s_opn / 5]
+    return author, score, text
+
+
 def read_data(
         vocab_size=128,
         limit_text=126,
@@ -145,12 +135,14 @@ def read_data(
         stop_after=2048,
         read_file_action=read_file,
         embed_level='word',
-        embed_encoder=encoder_onehot
+        embed_encoder=encoder_onehot,
+        save_by_batch=None
 ):
     all_adj = []
     all_input = []
     all_output = []
     flag = True
+    batch_count = 0
     while flag:
         # 以下为训练数据生成的代码
         print('第一步：建立Batch的图')
@@ -169,17 +161,25 @@ def read_data(
             mapper=mapper_, data=data_
         )
         sym_ama_list = [sym_ama for _ in batch_input]
-        all_adj += sym_ama_list.copy()
-        all_input += batch_input.copy()
-        all_output += batch_output.copy()
-        start_index = mapper_['last_index'] + 1
+        batch_start_index = batch_count
+        batch_count += len(batch_input)
         # todo: 保存all_adj、all_input、all_output到文件
         #  （一个大文件比较省磁盘空间，而且IO耗时小，但是占内存）
         #  （多个小文件占用磁盘空间大，而且IO耗时也大，但是能大幅度减轻内存占用）
-        if len(all_input) >= stop_after:
+        if save_by_batch is not None:
+            for i in range(len(batch_input)):
+                np.save(os.path.join(save_by_batch, 'AdjMat_{}.npy'.format(batch_start_index + i)), sym_ama_list[i])
+                np.save(os.path.join(save_by_batch, 'Input_{}.npy'.format(batch_start_index + i)), batch_input[i])
+                np.save(os.path.join(save_by_batch, 'Output_{}.npy'.format(batch_start_index + i)), batch_output[i])
+        else:
+            all_adj += sym_ama_list.copy()
+            all_input += batch_input.copy()
+            all_output += batch_output.copy()
+        start_index = mapper_['last_index'] + 1
+        if batch_count >= stop_after:
             flag = False
         time.sleep(1)
-        print('数据已采集：', len(all_input), '/', stop_after)
+        print('数据已采集：', batch_count, '/', stop_after)
     return all_input, all_adj, all_output
 
 

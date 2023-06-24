@@ -8,13 +8,21 @@ from Data.TextGCN.DataReader import read_data, encoder_onehot
 from Model.TextGCN.GNN import GraphConv
 
 
-def data_load(new_data=False, stop_after=8192, embed_level='word', embed_encoder=encoder_onehot, data_folder='TextGCN'):
+def data_load(
+        new_data=False,
+        stop_after=8192,
+        embed_level='word',
+        embed_encoder=encoder_onehot,
+        data_folder='TextGCN',
+        save_by_batch=None
+):
     if new_data:
         all_input, all_adj, all_output = read_data(
             data_='../../Data/my_personality.csv',
             stop_after=stop_after,
             embed_level=embed_level,
-            embed_encoder=embed_encoder
+            embed_encoder=embed_encoder,
+            save_by_batch=save_by_batch
         )
         all_input = np.array(all_input)
         all_output = np.array(all_output)

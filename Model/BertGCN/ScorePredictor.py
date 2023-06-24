@@ -13,7 +13,8 @@ if __name__ == '__main__':
         new_data=True,
         embed_level='graph',
         embed_encoder=encoder_bert,
-        data_folder='BertGCN'
+        data_folder='BertGCN',
+        save_by_batch='../../Data/BertGCN'
     )
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
