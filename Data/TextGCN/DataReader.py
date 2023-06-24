@@ -46,12 +46,13 @@ def read_file(
         least_words=3,
         most_word=30,
         embed_level='word',
-        embed_encoder=encoder_onehot
+        embed_encoder=encoder_onehot,
+        bert_dim=8
 ):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size)
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim)
     print('原始数据和Batch数据已载入')
     lemmatizer = None
     stemmer = None
@@ -150,7 +151,8 @@ def read_data(
         read_file_action=read_file,
         embed_level='word',
         embed_encoder=encoder_onehot,
-        save_by_batch=None
+        save_by_batch=None,
+        bert_dim=8
 ):
     all_adj = []
     all_input = []
@@ -167,7 +169,7 @@ def read_data(
         batch_input, batch_output, mapper, data = read_file_action(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
             mapper=mapper, data=data, least_words=3, most_word=32, embed_level=embed_level,
-            embed_encoder=embed_encoder
+            embed_encoder=embed_encoder, bert_dim=bert_dim
         )
         print('第三步：从Batch的图读取邻接矩阵')
         sym_ama, vis_ama, mapper, data = read_graph(

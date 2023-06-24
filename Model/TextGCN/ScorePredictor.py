@@ -16,6 +16,7 @@ def data_load(
         embed_encoder=encoder_onehot,
         data_folder='TextGCN',
         save_by_batch=False,
+        bert_dim=8
 ):
     if new_data:
         if save_by_batch:
@@ -28,7 +29,7 @@ def data_load(
             embed_level=embed_level,
             embed_encoder=embed_encoder,
             save_by_batch=batch_saving_dir,
-            # start_index=252
+            bert_dim=bert_dim
         )
         if not save_by_batch:
             all_input = np.array(all_input)
@@ -85,7 +86,6 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
         verbose=1,
         save_best_only=True,
     )
-    tf.keras.utils.plot_model(model, 'TextGCN.png', show_shapes=True, expand_nested=True, show_layer_activations=True)
     with tf.device('/cpu:0'):
         if use_generator:
             x_gen = all_input(batch_size=batch_size, gen_files_count=gen_files_count)
@@ -151,6 +151,7 @@ if __name__ == '__main__':
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
     else:
         model_ = model_build()
+    tf.keras.utils.plot_model(model_, 'TextGCN.png', show_shapes=True, expand_nested=True, show_layer_activations=True)
     if train:
         model_train(model_, all_input_, all_adj_, all_output_)
     if test:
