@@ -16,7 +16,8 @@ def data_load(
         embed_encoder=encoder_onehot,
         data_folder='TextGCN',
         save_by_batch=False,
-        bert_dim=8
+        bert_dim=8,
+        binary_label=False
 ):
     if new_data:
         if save_by_batch:
@@ -29,7 +30,8 @@ def data_load(
             embed_level=embed_level,
             embed_encoder=embed_encoder,
             save_by_batch=batch_saving_dir,
-            bert_dim=bert_dim
+            bert_dim=bert_dim,
+            binary_label=binary_label
         )
         if not save_by_batch:
             all_input = np.array(all_input)
@@ -82,19 +84,30 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
     )
     ckpt = tf.keras.callbacks.ModelCheckpoint(
         filepath='ScorePredictor.h5',
-        monitor='loss',
+        monitor='val_loss',
         verbose=1,
         save_best_only=True,
     )
     with tf.device('/cpu:0'):
         if use_generator:
-            x_gen = all_input(batch_size=batch_size, gen_files_count=gen_files_count)
+            gen_train = all_input(
+                batch_size=batch_size,
+                gen_files_count=gen_files_count,
+                train_data=True,
+                val_split=0.25
+            )
+            gen_test = all_input(
+                batch_size=batch_size,
+                gen_files_count=gen_files_count,
+                train_data=False
+            )
             model.fit(
-                x=x_gen,
+                x=gen_train,
                 epochs=10000,
                 callbacks=[ckpt],
                 shuffle=True,
-                steps_per_epoch=20
+                steps_per_epoch=20,
+                validation_data=gen_test
             )
         else:
             model.fit(
@@ -103,7 +116,8 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
                 batch_size=batch_size,
                 epochs=10000,
                 callbacks=[ckpt],
-                shuffle=True
+                shuffle=True,
+                validation_split=0.25
             )
 
 
@@ -146,7 +160,7 @@ def model_test(model, all_input, all_adj, all_output, use_generator=False, gen_f
 if __name__ == '__main__':
     train = False
     test = not train
-    all_input_, all_adj_, all_output_ = data_load(new_data=False)
+    all_input_, all_adj_, all_output_ = data_load(new_data=False, binary_label=False)
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
     else:

@@ -6,6 +6,8 @@ import numpy as np
 from Model.BertDNN.Bert import build_processor, tokenize
 
 processor = None
+train_list = None
+test_list = None
 
 
 def encoder_bert(a_index, mapper, t_index, graph):
@@ -19,8 +21,27 @@ def encoder_bert(a_index, mapper, t_index, graph):
     return text_vec.tolist()
 
 
-def batch_generator(batch_size=8, gen_files_count=8192, data_folder='../../Data/BertGCN/Batches'):
-    index_list = list(range(gen_files_count))
+def batch_generator(
+        batch_size=8,
+        gen_files_count=8192,
+        data_folder='../../Data/BertGCN/Batches',
+        train_data=True,
+        val_split=0.25
+):
+    global train_list, test_list
+    if train_list is None or test_list is None:
+        all_list = list(range(gen_files_count))
+        test_list = []
+        while len(test_list) < (val_split * gen_files_count):
+            index = random.choice(all_list)
+            while index in test_list:
+                index = random.choice(all_list)
+            test_list.append(index)
+        train_list = list(set(all_list).difference(set(test_list)))
+    if train_data:
+        index_list = train_list
+    else:
+        index_list = test_list
     while True:
         batch_input = []
         batch_adj = []

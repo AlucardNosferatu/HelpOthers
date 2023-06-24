@@ -23,16 +23,25 @@ def encoder_onehot(a_index, mapper, t_index, word):
     return embed_vec
 
 
-def read_row(data, index):
+def read_row(data, index, binary_label=False):
     row = data.iloc[index, :]
     text = row['STATUS'].lower()
     author = row['#AUTHID']
-    s_ext = row['sEXT']
-    s_neu = row['sNEU']
-    s_agr = row['sAGR']
-    s_con = row['sCON']
-    s_opn = row['sOPN']
-    score = [s_ext / 5, s_neu / 5, s_agr / 5, s_con / 5, s_opn / 5]
+    if binary_label:
+        score_dict = {'y': 1.0, 'n': 0.0}
+        c_ext = score_dict[row['cEXT']]
+        c_neu = score_dict[row['cNEU']]
+        c_agr = score_dict[row['cAGR']]
+        c_con = score_dict[row['cCON']]
+        c_opn = score_dict[row['cOPN']]
+        score = [c_ext, c_neu, c_agr, c_con, c_opn]
+    else:
+        s_ext = row['sEXT']
+        s_neu = row['sNEU']
+        s_agr = row['sAGR']
+        s_con = row['sCON']
+        s_opn = row['sOPN']
+        score = [s_ext / 5, s_neu / 5, s_agr / 5, s_con / 5, s_opn / 5]
     return author, score, text
 
 
@@ -47,7 +56,8 @@ def read_file(
         most_word=30,
         embed_level='word',
         embed_encoder=encoder_onehot,
-        bert_dim=8
+        bert_dim=8,
+        binary_label=False
 ):
     if type(data) is str:
         data = pd.read_csv(data)
@@ -63,7 +73,7 @@ def read_file(
     prev_author = None
     prev_score = None
     for index in tqdm(range(start_index, min(start_index + limit_text, data.shape[0]))):
-        author, score, text = read_row(data, index)
+        author, score, text = read_row(data, index, binary_label)
         if prev_author is None:
             prev_author = author
         if prev_score is None:
@@ -152,7 +162,8 @@ def read_data(
         embed_level='word',
         embed_encoder=encoder_onehot,
         save_by_batch=None,
-        bert_dim=8
+        bert_dim=8,
+        binary_label=False
 ):
     all_adj = []
     all_input = []
@@ -169,7 +180,7 @@ def read_data(
         batch_input, batch_output, mapper, data = read_file_action(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
             mapper=mapper, data=data, least_words=3, most_word=32, embed_level=embed_level,
-            embed_encoder=embed_encoder, bert_dim=bert_dim
+            embed_encoder=embed_encoder, bert_dim=bert_dim, binary_label=binary_label
         )
         print('第三步：从Batch的图读取邻接矩阵')
         sym_ama, vis_ama, mapper, data = read_graph(
