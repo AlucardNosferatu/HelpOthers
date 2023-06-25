@@ -77,7 +77,8 @@ def model_build(feature_input=None):
     return model
 
 
-def model_train(model, all_input, all_adj, all_output, use_generator=False, batch_size=2048, gen_files_count=8192):
+def model_train(model, all_input, all_adj, all_output, use_generator=False, gen_files_count=8192, batch_size=2048,
+                step_per_epoch=100, val_split=0.25):
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-7),
         loss=tf.keras.losses.BinaryCrossentropy(),
@@ -91,9 +92,7 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
         save_best_only=True,
     )
     with tf.device('/cpu:0'):
-        val_split = 0.25
         if use_generator:
-            step_per_epoch = 100
             gen_train = all_input(
                 batch_size=batch_size,
                 gen_files_count=gen_files_count,

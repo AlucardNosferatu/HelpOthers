@@ -29,6 +29,11 @@ if __name__ == '__main__':
         model_ = model_build(feature_input=tf.keras.Input(shape=(bert_dim, 256)))
     tf.keras.utils.plot_model(model_, 'BertGCN.png', show_shapes=True, expand_nested=True, show_layer_activations=True)
     if train:
-        model_train(model_, all_input_, None, None, use_generator=True, batch_size=64, gen_files_count=files_count)
+        model_train(
+            model_, all_input_, None, None, use_generator=True, gen_files_count=files_count,
+            batch_size=128, step_per_epoch=20, val_split=0.25
+        )
     if test:
-        model_test(model_, all_input_, None, None, use_generator=True, gen_files_count=files_count)
+        model_test(
+            model_, all_input_, None, None, use_generator=True, gen_files_count=files_count
+        )

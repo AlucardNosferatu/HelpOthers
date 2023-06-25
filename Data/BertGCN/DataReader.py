@@ -56,15 +56,16 @@ def batch_generator(
         index_list = train_list
     else:
         index_list = test_list
+    batch_size = min(len(index_list), batch_size)
     while True:
         batch_input = []
         batch_adj = []
         batch_output = []
         indices = []
         while len(batch_input) < batch_size:
-            index = random.choice(index_list)
-            while index in indices:
-                index = random.choice(index_list)
+            choice_list = list(set(index_list).difference(set(indices)))
+            index = random.choice(choice_list)
+            assert index not in indices
             slice_input = np.load(os.path.join(data_folder, 'Input_{}.npy'.format(index)))
             slice_adj = np.load(os.path.join(data_folder, 'AdjMat_{}.npy'.format(index)))
             slice_output = np.load(os.path.join(data_folder, 'Output_{}.npy'.format(index)))
