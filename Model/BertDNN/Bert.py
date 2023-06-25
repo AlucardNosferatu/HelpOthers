@@ -32,11 +32,20 @@ def train_mlm(data='../../Data/my_personality.csv'):
         text = data.iloc[i, :]['STATUS'].lower()
         features.append(text)
     # Pretrained language model.
-    masked_lm = keras_nlp.models.BertMaskedLM.from_preset(
-        "bert_tiny_en_uncased",
+    if os.path.exists('Bert.h5'):
+        masked_lm = tf.keras.models.load_model('Bert.h5')
+    else:
+        masked_lm = keras_nlp.models.BertMaskedLM.from_preset(
+            "bert_tiny_en_uncased",
+        )
+    ckpt = tf.keras.callbacks.ModelCheckpoint(
+        filepath='Bert.h5',
+        monitor='loss',
+        verbose=1,
+        save_best_only=True,
     )
     with tf.device('/gpu:0'):
-        masked_lm.fit(x=features, batch_size=64, verbose=1, epochs=1000)
+        masked_lm.fit(x=features, batch_size=64, verbose=1, epochs=1000, callbacks=[ckpt])
     print('Done')
 
 
