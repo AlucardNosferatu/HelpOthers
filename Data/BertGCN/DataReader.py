@@ -86,5 +86,5 @@ if __name__ == '__main__':
         (256, 256),
         (5,)
     ]
-    batch_validation(correct_shapes=shapes, gen_files_count=326)
+    batch_validation(correct_shapes=shapes, gen_files_count=325)
     print('Done')
