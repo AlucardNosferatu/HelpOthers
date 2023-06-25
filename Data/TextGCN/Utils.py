@@ -96,7 +96,7 @@ def get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim
         'i2w': index2word,
         'tlist': text_count_list,
         'alist': author_count_list,
-        'total_dim': len(author_count_list) + len(text_count_list) + vocab_size,
+        'total_dim': limit_author + limit_text + vocab_size,
         'last_index': last_index,
         'bert_dim': bert_dim
     }
