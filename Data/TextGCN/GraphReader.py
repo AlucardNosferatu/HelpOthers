@@ -53,6 +53,8 @@ def read_graph(start_index, vocab_size, limit_text, limit_author, mapper=None, d
             word_index = word2index[word_str] - 1
             adj_row[word_index + word_offset] = float(word['value'])
         adj_matrix.append(adj_row)
+    while len(adj_matrix) < total_dim - vocab_size:
+        adj_matrix.append([0.0] * total_dim)
     time.sleep(1)
     print('文档-词汇关系已写入邻接矩阵')
     print('开始写入词汇-词汇关系到邻接矩阵')

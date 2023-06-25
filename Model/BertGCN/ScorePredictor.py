@@ -20,7 +20,7 @@ if __name__ == '__main__':
         save_by_batch=True,
         bert_dim=bert_dim,
         binary_label=False,
-        start_index=9828
+        start_index=0
         # 切换yes/no或者分数数据
     )
     if os.path.exists('ScorePredictor.h5'):
