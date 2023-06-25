@@ -60,15 +60,19 @@ def model_build(feature_input=None):
     adjacent_matrix = tf.keras.Input(shape=(256, 256))
     x = GraphConv(num_outputs=256, activation='relu')([feature_input, adjacent_matrix])
     x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
     x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
     x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
     x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Flatten()(x)
     x = tf.keras.layers.BatchNormalization()(x)
@@ -92,7 +96,7 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, gen_
         verbose=1,
         save_best_only=True,
     )
-    with tf.device('/cpu:0'):
+    with tf.device('/gpu:0'):
         if use_generator:
             print('开始创建训练/测试数据生成器')
             shapes = [
