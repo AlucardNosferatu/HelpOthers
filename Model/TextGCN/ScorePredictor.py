@@ -91,12 +91,14 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
         save_best_only=True,
     )
     with tf.device('/cpu:0'):
+        val_split = 0.25
         if use_generator:
+            step_per_epoch = 100
             gen_train = all_input(
                 batch_size=batch_size,
                 gen_files_count=gen_files_count,
                 train_data=True,
-                val_split=0.25
+                val_split=val_split
             )
             gen_test = all_input(
                 batch_size=batch_size,
@@ -108,8 +110,9 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
                 epochs=10000,
                 callbacks=[ckpt],
                 shuffle=True,
-                steps_per_epoch=20,
-                validation_data=gen_test
+                steps_per_epoch=step_per_epoch,
+                validation_data=gen_test,
+                validation_steps=int(step_per_epoch * val_split)
             )
         else:
             model.fit(
@@ -119,7 +122,7 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, batc
                 epochs=10000,
                 callbacks=[ckpt],
                 shuffle=True,
-                validation_split=0.25
+                validation_split=val_split
             )
 
 
