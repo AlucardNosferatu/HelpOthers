@@ -11,6 +11,7 @@ if __name__ == '__main__':
     test = not train
     bert_dim = 32
     files_count = 325
+    print('开始读取数据，警告：生成新数据所需时间会非常漫长')
     all_input_, _, _ = data_load(
         new_data=False,
         stop_after=files_count,
@@ -23,6 +24,8 @@ if __name__ == '__main__':
         start_index=0
         # 切换yes/no或者分数数据
     )
+    print('数据读取完毕')
+    print('开始模型初始化')
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
         print('模型已读取')

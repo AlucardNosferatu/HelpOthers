@@ -85,6 +85,7 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, gen_
         metrics=['accuracy'],
         run_eagerly=True
     )
+    print('模型编译完成')
     ckpt = tf.keras.callbacks.ModelCheckpoint(
         filepath='ScorePredictor.h5',
         monitor='val_loss',
@@ -125,6 +126,7 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, gen_
                 validation_steps=int(step_per_epoch * val_split)
             )
         else:
+            print('现在开始训练')
             model.fit(
                 x=[all_input, all_adj],
                 y=all_output,
