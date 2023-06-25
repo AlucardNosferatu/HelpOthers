@@ -12,7 +12,7 @@ if __name__ == '__main__':
     bert_dim = 32
     files_count = 326
     all_input_, _, _ = data_load(
-        new_data=True,
+        new_data=False,
         stop_after=files_count,
         embed_level='graph',
         embed_encoder=encoder_bert,

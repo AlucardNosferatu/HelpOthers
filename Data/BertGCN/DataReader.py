@@ -2,6 +2,7 @@ import os
 import random
 
 import numpy as np
+from tqdm import tqdm
 
 from Model.BertDNN.Bert import build_processor, tokenize
 
@@ -19,6 +20,19 @@ def encoder_bert(a_index, mapper, t_index, graph):
     _ = a_index
     _ = t_index
     return text_vec.tolist()
+
+
+def batch_validation(correct_shapes, gen_files_count=8192, data_folder='Batches'):
+    input_shape = correct_shapes[0]
+    adj_shape = correct_shapes[1]
+    output_shape = correct_shapes[2]
+    for i in tqdm(range(gen_files_count)):
+        slice_input = np.load(os.path.join(data_folder, 'Input_{}.npy'.format(i)))
+        assert slice_input.shape == input_shape
+        slice_adj = np.load(os.path.join(data_folder, 'AdjMat_{}.npy'.format(i)))
+        assert slice_adj.shape == adj_shape
+        slice_output = np.load(os.path.join(data_folder, 'Output_{}.npy'.format(i)))
+        assert slice_output.shape == output_shape
 
 
 def batch_generator(
@@ -67,4 +81,10 @@ def batch_generator(
 
 
 if __name__ == '__main__':
+    shapes = [
+        (32, 256),
+        (256, 256),
+        (5,)
+    ]
+    batch_validation(correct_shapes=shapes, gen_files_count=326)
     print('Done')
