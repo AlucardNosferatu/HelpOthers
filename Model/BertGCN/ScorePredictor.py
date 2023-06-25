@@ -31,7 +31,7 @@ if __name__ == '__main__':
     if train:
         model_train(
             model_, all_input_, None, None, use_generator=True, gen_files_count=files_count,
-            batch_size=128, step_per_epoch=20, val_split=0.25
+            batch_size=128, step_per_epoch=20, val_split=0.25, workers=8
         )
     if test:
         model_test(

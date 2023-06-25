@@ -78,7 +78,7 @@ def model_build(feature_input=None):
 
 
 def model_train(model, all_input, all_adj, all_output, use_generator=False, gen_files_count=8192, batch_size=2048,
-                step_per_epoch=100, val_split=0.25):
+                step_per_epoch=100, val_split=0.25, workers=8):
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-7),
         loss=tf.keras.losses.BinaryCrossentropy(),
@@ -97,12 +97,14 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, gen_
                 batch_size=batch_size,
                 gen_files_count=gen_files_count,
                 train_data=True,
-                val_split=val_split
+                val_split=val_split,
+                workers=workers
             )
             gen_test = all_input(
                 batch_size=batch_size,
                 gen_files_count=gen_files_count,
-                train_data=False
+                train_data=False,
+                workers=workers
             )
             model.fit(
                 x=gen_train,

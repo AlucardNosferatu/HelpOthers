@@ -1,5 +1,7 @@
 import os
 import random
+import threading
+import time
 
 import numpy as np
 from tqdm import tqdm
@@ -40,9 +42,33 @@ def batch_generator(
         gen_files_count=8192,
         data_folder='../../Data/BertGCN/Batches',
         train_data=True,
-        val_split=0.25
+        val_split=0.25,
+        workers=8
 ):
-    global train_list, test_list
+    index_list = init_indices(gen_files_count, train_data, val_split)
+    batch_size = min(len(index_list), batch_size)
+    while True:
+        batch_input = []
+        batch_adj = []
+        batch_output = []
+        indices = []
+        threads = []
+        for _ in range(batch_size):
+            choice_list = list(set(index_list).difference(set(indices)))
+            index = random.choice(choice_list)
+            assert index not in indices
+            indices.append(index)
+        read_by_threads(batch_adj, batch_input, batch_output, batch_size, data_folder, indices, threads, workers)
+        batch_input = np.array(batch_input)
+        batch_adj = np.array(batch_adj)
+        batch_output = np.array(batch_output)
+        x = [batch_input, batch_adj]
+        y = batch_output
+        yield x, y
+
+
+def init_indices(gen_files_count, train_data, val_split):
+    global test_list, train_list
     if train_list is None or test_list is None:
         all_list = list(range(gen_files_count))
         test_list = []
@@ -56,29 +82,34 @@ def batch_generator(
         index_list = train_list
     else:
         index_list = test_list
-    batch_size = min(len(index_list), batch_size)
-    while True:
-        batch_input = []
-        batch_adj = []
-        batch_output = []
-        indices = []
-        while len(batch_input) < batch_size:
-            choice_list = list(set(index_list).difference(set(indices)))
-            index = random.choice(choice_list)
-            assert index not in indices
-            slice_input = np.load(os.path.join(data_folder, 'Input_{}.npy'.format(index)))
-            slice_adj = np.load(os.path.join(data_folder, 'AdjMat_{}.npy'.format(index)))
-            slice_output = np.load(os.path.join(data_folder, 'Output_{}.npy'.format(index)))
-            batch_input.append(slice_input)
-            batch_adj.append(slice_adj)
-            batch_output.append(slice_output)
-            indices.append(index)
-        batch_input = np.array(batch_input)
-        batch_adj = np.array(batch_adj)
-        batch_output = np.array(batch_output)
-        x = [batch_input, batch_adj]
-        y = batch_output
-        yield x, y
+    return index_list
+
+
+def read_by_threads(batch_adj, batch_input, batch_output, batch_size, data_folder, indices, threads, workers):
+    batch_sync = threading.Lock()
+    for i in range(workers):
+        indices_per_worker = [indices[j] for j in range(batch_size) if j % workers == i]
+        thread = threading.Thread(
+            target=read_by_thread,
+            args=(batch_adj, batch_input, batch_output, data_folder, indices_per_worker.copy(), batch_sync)
+        )
+        threads.append(thread)
+    for thread in threads:
+        thread.start()
+    while len(batch_input) < batch_size:
+        time.sleep(0.01)
+
+
+def read_by_thread(batch_adj, batch_input, batch_output, data_folder, indices, lock):
+    for index in indices:
+        slice_input = np.load(os.path.join(data_folder, 'Input_{}.npy'.format(index)))
+        slice_adj = np.load(os.path.join(data_folder, 'AdjMat_{}.npy'.format(index)))
+        slice_output = np.load(os.path.join(data_folder, 'Output_{}.npy'.format(index)))
+        lock.acquire()
+        batch_input.append(slice_input)
+        batch_adj.append(slice_adj)
+        batch_output.append(slice_output)
+        lock.release()
 
 
 if __name__ == '__main__':
