@@ -94,7 +94,6 @@ def read_file(
         text = unify_symbol(text)
         if embed_level == 'graph':
             # matrix_order = 'author' + 'text' + 'word'
-
             text, lemmatizer, stemmer, speller = unify_word_form(
                 text, lemmatizer, stemmer, speller
             )
