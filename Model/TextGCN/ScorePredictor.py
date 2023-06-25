@@ -17,7 +17,8 @@ def data_load(
         data_folder='TextGCN',
         save_by_batch=False,
         bert_dim=8,
-        binary_label=False
+        binary_label=False,
+        start_index=0
 ):
     if new_data:
         if save_by_batch:
@@ -32,7 +33,7 @@ def data_load(
             save_by_batch=batch_saving_dir,
             bert_dim=bert_dim,
             binary_label=binary_label,
-            # start_index=9751
+            start_index=start_index
         )
         if not save_by_batch:
             all_input = np.array(all_input)

@@ -19,7 +19,8 @@ if __name__ == '__main__':
         data_folder='BertGCN',
         save_by_batch=True,
         bert_dim=bert_dim,
-        binary_label=False
+        binary_label=False,
+        start_index=9828
         # 切换yes/no或者分数数据
     )
     if os.path.exists('ScorePredictor.h5'):
