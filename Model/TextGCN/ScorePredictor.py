@@ -93,12 +93,19 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, gen_
     )
     with tf.device('/cpu:0'):
         if use_generator:
+            print('开始创建训练/测试数据生成器')
+            shapes = [
+                (32, 256),
+                (256, 256),
+                (5,)
+            ]
             gen_train = all_input(
                 batch_size=batch_size,
                 gen_files_count=gen_files_count,
                 train_data=True,
                 val_split=val_split,
-                workers=workers
+                workers=workers,
+                correct_shapes=shapes
             )
             gen_test = all_input(
                 batch_size=batch_size,
@@ -106,6 +113,8 @@ def model_train(model, all_input, all_adj, all_output, use_generator=False, gen_
                 train_data=False,
                 workers=workers
             )
+            print('训练/测试数据生成器创建完毕')
+            print('现在开始训练')
             model.fit(
                 x=gen_train,
                 epochs=10000,

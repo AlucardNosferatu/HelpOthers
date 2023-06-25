@@ -25,8 +25,10 @@ if __name__ == '__main__':
     )
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
+        print('模型已读取')
     else:
         model_ = model_build(feature_input=tf.keras.Input(shape=(bert_dim, 256)))
+        print('模型已建立')
     tf.keras.utils.plot_model(model_, 'BertGCN.png', show_shapes=True, expand_nested=True, show_layer_activations=True)
     if train:
         model_train(

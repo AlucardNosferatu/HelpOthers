@@ -43,9 +43,10 @@ def batch_generator(
         data_folder='../../Data/BertGCN/Batches',
         train_data=True,
         val_split=0.25,
-        workers=8
+        workers=8,
+        correct_shapes=None
 ):
-    index_list = init_indices(gen_files_count, train_data, val_split)
+    index_list = init_indices(gen_files_count, train_data, val_split, correct_shapes)
     batch_size = min(len(index_list), batch_size)
     while True:
         batch_input = []
@@ -67,9 +68,14 @@ def batch_generator(
         yield x, y
 
 
-def init_indices(gen_files_count, train_data, val_split):
+def init_indices(gen_files_count, train_data, val_split, correct_shapes=None):
     global test_list, train_list
     if train_list is None or test_list is None:
+        if correct_shapes is not None:
+            print('开始校验数据格式')
+            batch_validation(correct_shapes=correct_shapes, gen_files_count=gen_files_count)
+            time.sleep(1)
+            print('数据格式校验完毕')
         all_list = list(range(gen_files_count))
         test_list = []
         while len(test_list) < (val_split * gen_files_count):
@@ -113,10 +119,4 @@ def read_by_thread(batch_adj, batch_input, batch_output, data_folder, indices, l
 
 
 if __name__ == '__main__':
-    shapes = [
-        (32, 256),
-        (256, 256),
-        (5,)
-    ]
-    batch_validation(correct_shapes=shapes, gen_files_count=325)
     print('Done')
