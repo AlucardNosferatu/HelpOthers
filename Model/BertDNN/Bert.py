@@ -36,7 +36,7 @@ def train_mlm(data='../../Data/my_personality.csv'):
         "bert_tiny_en_uncased",
     )
     with tf.device('/gpu:0'):
-        masked_lm.fit(x=features, batch_size=64, verbose=2, epochs=1000)
+        masked_lm.fit(x=features, batch_size=64, verbose=1, epochs=1000)
     print('Done')
 
 
