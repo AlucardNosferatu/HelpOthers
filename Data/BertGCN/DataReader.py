@@ -16,7 +16,7 @@ test_list = None
 def encoder_bert(a_index, mapper, t_index, graph):
     global processor
     if processor is None:
-        processor = build_processor(seq_len=mapper['bert_dim'])
+        processor = build_processor(seq_len=mapper['bert_dim'], path_post_trained=mapper['path_post_trained'])
     text_vec = tokenize(graph, processor)
     text_vec = text_vec.astype(float)
     _ = a_index

@@ -8,11 +8,14 @@ from tqdm import tqdm
 from Data.TextGCN.Utils import get_mapper
 
 
-def read_graph(start_index, vocab_size, limit_text, limit_author, mapper=None, data='my_personality.csv'):
+def read_graph(
+        start_index, vocab_size, limit_text, limit_author, mapper=None, data='my_personality.csv',
+        path_post_trained='../../Model/BertDNN/Bert.h5'
+):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size)
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, path_post_trained)
     print('原始数据和Batch数据已载入')
     # GUOER: use 'bolt://server.natappfree.cc:42148' auth=('GUOER','Your QQ Number')
     graph = Graph("bolt://localhost:7687", auth=("neo4j", "20291224"))

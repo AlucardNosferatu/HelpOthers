@@ -82,7 +82,7 @@ def limit_vocab(text_count_list, vocab_size):
     return word2index, index2word
 
 
-def get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim=8):
+def get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim=8, path_post_trained=None):
     print('提取Batch文档及作者')
     data, text_count_list, author_count_list, last_index = count_total(start_index, data=data, limit_text=limit_text,
                                                                        limit_author=limit_author)
@@ -100,4 +100,6 @@ def get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim
         'last_index': last_index,
         'bert_dim': bert_dim
     }
+    if path_post_trained is not None:
+        mapper.__setitem__('path_post_trained', path_post_trained)
     return data, mapper

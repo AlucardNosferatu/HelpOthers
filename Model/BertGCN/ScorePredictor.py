@@ -7,20 +7,20 @@ from Model.TextGCN.GNN import GraphConv
 from Model.TextGCN.ScorePredictor import data_load, model_build, model_train, model_test
 
 if __name__ == '__main__':
-    train = True
+    train = False
     test = not train
     bert_dim = 32
     files_count = 325
     print('开始读取数据，警告：生成新数据所需时间会非常漫长')
     all_input_, _, _ = data_load(
-        new_data=False,
+        new_data=True,
         stop_after=files_count,
         embed_level='graph',
         embed_encoder=encoder_bert,
         data_folder='BertGCN',
         save_by_batch=True,
         bert_dim=bert_dim,
-        binary_label=False,
+        binary_label=True,
         start_index=0
         # 切换yes/no或者分数数据
     )

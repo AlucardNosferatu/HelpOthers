@@ -18,7 +18,8 @@ def data_load(
         save_by_batch=False,
         bert_dim=8,
         binary_label=False,
-        start_index=0
+        start_index=0,
+        path_post_trained='../BertDNN/Bert.h5'
 ):
     if new_data:
         if save_by_batch:
@@ -33,7 +34,8 @@ def data_load(
             save_by_batch=batch_saving_dir,
             bert_dim=bert_dim,
             binary_label=binary_label,
-            start_index=start_index
+            start_index=start_index,
+            path_post_trained=path_post_trained
         )
         if not save_by_batch:
             all_input = np.array(all_input)
@@ -59,23 +61,28 @@ def model_build(feature_input=None):
         feature_input = tf.keras.Input(shape=(256,))
     adjacent_matrix = tf.keras.Input(shape=(256, 256))
     x = GraphConv(num_outputs=256, activation='relu')([feature_input, adjacent_matrix])
-    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
     x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.Dropout(0.25)(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.Dropout(0.25)(x)
+    x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
     x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
     x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
-    x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
-    x = GraphConv(num_outputs=256, activation='relu')([x, adjacent_matrix])
     x = tf.keras.layers.Dense(1024, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dropout(0.25)(x)
     x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Flatten()(x)
-    x = tf.keras.layers.BatchNormalization()(x)
     outputs = tf.keras.layers.Dense(5, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=[feature_input, adjacent_matrix], outputs=outputs)
     return model
@@ -159,7 +166,7 @@ def model_test(model, all_input, all_adj, all_output, use_generator=False, gen_f
             x, y = gen.__next__()
             text_feature = x[0]
             adjacent_mat = x[1]
-            score = (y * 5).tolist()
+            score = (y[0] * 5).tolist()
         else:
             index = random.choice(list(range(len(all_input))))
             text_feature = np.expand_dims(all_input[index], axis=0)

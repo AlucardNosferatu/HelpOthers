@@ -9,10 +9,10 @@ from keras_nlp.src.layers import MaskedLMMaskGenerator
 from tqdm import tqdm
 
 
-def build_processor(seq_len=32, use_post_trained=True):
+def build_processor(seq_len=32, use_post_trained=True, path_post_trained='Bert.h5'):
     if use_post_trained:
         masked_lm = tf.keras.models.load_model(
-            'Bert.h5',
+            path_post_trained,
             custom_objects={'BertMaskedLM': keras_nlp.models.BertMaskedLM}
         )
         processor = masked_lm.preprocessor
