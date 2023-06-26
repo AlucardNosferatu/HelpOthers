@@ -56,29 +56,18 @@ def data_load(
     return all_input, all_adj, all_output
 
 
-def model_build(feature_input=None):
+def model_build(feature_input=None, gc_num_outputs=512, dilate_dim=512, gc_count=16, adj_mat_dim=256, score_dim=5):
     if feature_input is None:
-        feature_input = tf.keras.Input(shape=(256,))
-    adjacent_matrix = tf.keras.Input(shape=(256, 256))
-
-    x = GraphConv(num_outputs=512, activation='relu')([feature_input, adjacent_matrix])
-    x = tf.keras.layers.Dense(2048, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
-    x = GraphConv(num_outputs=512, activation='relu')([x, adjacent_matrix])
-    x = tf.keras.layers.Dense(2048, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
-    x = GraphConv(num_outputs=512, activation='relu')([x, adjacent_matrix])
-    x = tf.keras.layers.Dense(2048, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
-    x = GraphConv(num_outputs=512, activation='relu')([x, adjacent_matrix])
-    x = tf.keras.layers.Dense(2048, activation=tf.nn.selu)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Dense(256, activation=tf.nn.selu)(x)
+        feature_input = tf.keras.Input(shape=(adj_mat_dim,))
+    adjacent_matrix = tf.keras.Input(shape=(adj_mat_dim, adj_mat_dim))
+    x = feature_input
+    for _ in range(gc_count):
+        x = GraphConv(num_outputs=gc_num_outputs, activation='relu')([x, adjacent_matrix])
+        x = tf.keras.layers.Dense(dilate_dim, activation=tf.nn.selu)(x)
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Dense(adj_mat_dim, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Flatten()(x)
-    outputs = tf.keras.layers.Dense(5, activation=tf.nn.sigmoid)(x)
+    outputs = tf.keras.layers.Dense(score_dim, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=[feature_input, adjacent_matrix], outputs=outputs)
     return model
 
