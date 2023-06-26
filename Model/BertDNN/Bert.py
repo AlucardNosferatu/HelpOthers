@@ -9,7 +9,7 @@ from keras_nlp.src.layers import MaskedLMMaskGenerator
 from tqdm import tqdm
 
 
-def build_processor(seq_len=32, use_post_trained=False):
+def build_processor(seq_len=32, use_post_trained=True):
     if use_post_trained:
         masked_lm = tf.keras.models.load_model(
             'Bert.h5',
@@ -119,7 +119,7 @@ def bert_test(use_post_trained=True, batch_test=True):
 
 if __name__ == '__main__':
     bert_train()
-    bert_test(use_post_trained=True, batch_test=True)
-    bert_test(use_post_trained=True, batch_test=False)
-    bert_test(use_post_trained=False, batch_test=True)
-    bert_test(use_post_trained=False, batch_test=False)
+    # bert_test(use_post_trained=True, batch_test=True)
+    # bert_test(use_post_trained=True, batch_test=False)
+    # bert_test(use_post_trained=False, batch_test=True)
+    # bert_test(use_post_trained=False, batch_test=False)
