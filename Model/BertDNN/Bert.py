@@ -65,7 +65,7 @@ def detokenize(input_vec, processor):
 
 
 # Bert训练方式不止一种，这里只用了无标记训练任务MLM，也许可以用分数预测本身来训练？？？
-def train_bert(data='../../Data/my_personality.csv'):
+def bert_train(data='../../Data/my_personality.csv'):
     assert 'XLA_FLAGS' in list(os.environ.keys())
     if type(data) is str:
         data = pd.read_csv(data)
@@ -94,7 +94,7 @@ def train_bert(data='../../Data/my_personality.csv'):
     print('Done')
 
 
-def test_bert(use_post_trained=True, batch_test=True):
+def bert_test(use_post_trained=True, batch_test=True):
     processor_ = build_processor(use_post_trained=use_post_trained)
     old_txt = [
         'I miss Carol a lot. Where is she now?',
@@ -118,8 +118,8 @@ def test_bert(use_post_trained=True, batch_test=True):
 
 
 if __name__ == '__main__':
-    # train_bert()
-    test_bert(use_post_trained=True, batch_test=True)
-    test_bert(use_post_trained=True, batch_test=False)
-    test_bert(use_post_trained=False, batch_test=True)
-    test_bert(use_post_trained=False, batch_test=False)
+    bert_train()
+    bert_test(use_post_trained=True, batch_test=True)
+    bert_test(use_post_trained=True, batch_test=False)
+    bert_test(use_post_trained=False, batch_test=True)
+    bert_test(use_post_trained=False, batch_test=False)
