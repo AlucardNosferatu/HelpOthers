@@ -7,13 +7,13 @@ from Model.TextGCN.GNN import GraphConv
 from Model.TextGCN.ScorePredictor import data_load, model_build, model_train, model_test
 
 if __name__ == '__main__':
-    train = False
+    train = True
     test = not train
     bert_dim = 32
     files_count = 325
     print('开始读取数据，警告：生成新数据所需时间会非常漫长')
     all_input_, _, _ = data_load(
-        new_data=True,
+        new_data=False,
         stop_after=files_count,
         embed_level='graph',
         embed_encoder=encoder_bert,
