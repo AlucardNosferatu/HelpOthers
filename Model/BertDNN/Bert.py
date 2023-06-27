@@ -23,7 +23,7 @@ def build_processor(
         if type(res) is not dict:
             res = res[0]
         vec = np.array(res['token_ids'])
-        if vec == sav[key]:
+        if (vec == sav[key]).all:
             return True
         else:
             return False

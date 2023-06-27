@@ -13,18 +13,18 @@ if __name__ == '__main__':
     files_count = 325
     print('开始读取数据')
     all_input_, _, _ = data_load(
-        new_data=False,
+        new_data=True,
         stop_after=files_count,
         embed_level='graph',
         embed_encoder=encoder_bert,
         data_folder='BertGCN',
         save_by_batch=True,
         bert_dim=bert_dim,
-        binary_label=True,
+        binary_label=False,
         start_index=0,
         batch_count=0,
         saved_bert_encoded_vec='../../Data/BertGCN/SavedBertEmbedding.pkl',
-        path_post_trained=None
+        path_post_trained='../BertDNN/Bert.h5'
         # 切换yes/no或者分数数据
     )
     print('数据读取完毕')
