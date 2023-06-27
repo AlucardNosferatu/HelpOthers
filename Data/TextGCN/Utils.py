@@ -104,11 +104,11 @@ def get_mapper(
         'last_index': last_index,
         'bert_dim': bert_dim,
         'saved_output': saved_output,
-        'use_post_trained': False
+        'use_post_trained': False,
+        'path_post_trained': path_post_trained
     }
     if path_post_trained is not None:
         mapper['use_post_trained'] = True
-        mapper.__setitem__('path_post_trained', path_post_trained)
     return data, mapper
 
 
