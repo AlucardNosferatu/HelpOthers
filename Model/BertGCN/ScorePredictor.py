@@ -13,7 +13,7 @@ if __name__ == '__main__':
     files_count = 325
     print('开始读取数据')
     all_input_, _, _ = data_load(
-        new_data=True,
+        new_data=False,
         stop_after=files_count,
         embed_level='graph',
         embed_encoder=encoder_bert,

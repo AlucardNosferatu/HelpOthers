@@ -249,14 +249,22 @@ def read_data_new(
 ):
     def has_alive(ts):
         print('===============')
+        yes = False
         for thread in ts:
             if thread.is_alive():
                 print('线程:', thread.user_id, '进行中')
-                return True
-            else:
-                print('线程:', thread.user_id, '已完成')
+                yes = True
         print('===============')
-        return False
+        return yes
+
+    def clean_dead(ts):
+        i = 0
+        while i < len(ts):
+            if not ts[i].is_alive():
+                ts.pop(i)
+            else:
+                i += 1
+        return ts
 
     _ = stop_after
     t_lock = threading.Lock()
@@ -281,6 +289,7 @@ def read_data_new(
         if status[0] == 'RGL_FINISH':
             break_after_empty = True
         if len(mapper_list) > 0:
+            threads = clean_dead(threads)
             t_lock.acquire()
             mapper = mapper_list.pop(0)
             adj_mat = adj_mat_list.pop(0)
