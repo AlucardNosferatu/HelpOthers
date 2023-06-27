@@ -24,7 +24,8 @@ if __name__ == '__main__':
         start_index=0,
         batch_count=0,
         saved_bert_encoded_vec='../../Data/BertGCN/SavedBertEmbedding.pkl',
-        path_post_trained='../BertDNN/Bert.h5'
+        path_post_trained=None
+        # path_post_trained='../BertDNN/Bert.h5'
         # 切换yes/no或者分数数据
     )
     print('数据读取完毕')

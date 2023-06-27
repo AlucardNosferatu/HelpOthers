@@ -64,7 +64,7 @@ def data_load(
 
 def model_build(
         feature_input=None, gc_num_outputs=512, dilate_dim=512, gc_count=4, adj_mat_dim=256, score_dim=5,
-        softmax_out=True
+        softmax_out=False
 ):
     if feature_input is None:
         feature_input = tf.keras.Input(shape=(adj_mat_dim,))

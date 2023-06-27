@@ -122,6 +122,7 @@ def bert_train(data='../../Data/my_personality.csv'):
         masked_lm = keras_nlp.models.BertMaskedLM.from_preset(
             "bert_tiny_en_uncased",
         )
+    masked_lm.trainable = True
     ckpt = tf.keras.callbacks.ModelCheckpoint(
         filepath='Bert.h5',
         monitor='loss',
