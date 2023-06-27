@@ -75,7 +75,11 @@ def read_file(
     graph_batch = []
     prev_author = None
     prev_score = None
-    for index in tqdm(range(start_index, min(start_index + limit_text, data.shape[0]))):
+    display_pbar = False
+    progress = range(start_index, min(start_index + limit_text, data.shape[0]))
+    if display_pbar:
+        progress = tqdm(progress)
+    for index in progress:
         author, score, text = read_row(data, index, binary_label)
         if prev_author is None:
             prev_author = author
@@ -180,7 +184,6 @@ def read_data_old(
     flag = True
     while flag:
         # 以下为训练数据生成的代码
-
         print('第一步：建立Batch的图并读取邻接矩阵')
         mapper, data, sym_ama, vis_ama = read_graph(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
@@ -275,6 +278,7 @@ def read_data_new(
                 )
             )
             sd_thread.start()
+            start_index = mapper['last_index'] + 1
             batch_start_index += 1
         elif break_after_empty:
             break
@@ -285,12 +289,14 @@ def read_data_new(
 
 def save_data(adj_mat, batch_start_index, bert_dim, binary_label, data, embed_encoder, embed_level, limit_author,
               limit_text, mapper, path_post_trained, read_file_action, save_by_batch, start_index, vocab_size):
+    print('线程:', batch_start_index, '已启动')
     batch_input, batch_output, _, _ = read_file_action(
         start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
         mapper=mapper, data=data, least_words=3, most_word=32, embed_level=embed_level,
         embed_encoder=embed_encoder, bert_dim=bert_dim, binary_label=binary_label,
         path_post_trained=path_post_trained
     )
+    print('线程:', batch_start_index, '特征矩阵已生成')
     for i in range(len(batch_input)):
         np.save(
             os.path.join(save_by_batch, 'AdjMat_{}_{}.npy'.format(batch_start_index, i)),
@@ -304,6 +310,8 @@ def save_data(adj_mat, batch_start_index, bert_dim, binary_label, data, embed_en
             os.path.join(save_by_batch, 'Output_{}_{}.npy'.format(batch_start_index, i)),
             np.array(batch_output[i])
         )
+    print('线程:', batch_start_index, '训练三要素已保存')
+    print('线程:', batch_start_index, '结束任务')
 
 
 if __name__ == '__main__':

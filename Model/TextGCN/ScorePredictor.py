@@ -51,7 +51,7 @@ def data_load(
             np.save('../../Data/{}/Output.npy'.format(data_folder), all_output)
             np.save('../../Data/{}/AdjMat.npy'.format(data_folder), all_adj)
     if save_by_batch:
-        # todo: batch generator ([[input,adj],output])
+
         all_input = batch_generator
         all_output = None
         all_adj = None

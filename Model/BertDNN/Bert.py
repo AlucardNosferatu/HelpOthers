@@ -10,7 +10,8 @@ import tensorflow as tf
 from keras_nlp.src.layers import MaskedLMMaskGenerator
 from tqdm import tqdm
 
-lock = threading.Lock()
+file_lock = threading.Lock()
+bert_lock = threading.Lock()
 
 
 def build_processor(
@@ -57,15 +58,17 @@ def tokenize(input_str, processor, save=True, load=True):
     if load and hasattr(processor, 'saved_output') and input_str in processor.saved_output.keys():
         vec = processor.saved_output[input_str]
     else:
+        bert_lock.acquire()
         res = processor(input_str)
+        bert_lock.release()
         if type(res) is not dict:
             res = res[0]
         vec = np.array(res['token_ids'])
         if save and hasattr(processor, 'saved_output'):
-            lock.acquire()
+            file_lock.acquire()
             processor.saved_output.__setitem__(input_str, vec)
             pickle.dump(processor.saved_output, open(processor.saved_output_path, 'wb'))
-            lock.release()
+            file_lock.release()
     return vec
 
 
