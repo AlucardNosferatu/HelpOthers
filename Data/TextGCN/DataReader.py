@@ -239,7 +239,7 @@ def read_data_new(
         bert_dim=8,
         binary_label=False,
         path_post_trained='../../Model/BertDNN/Bert.h5',
-        batch_count=None,
+        batch_count=0,
         saved_output=None
 ):
     t_lock = threading.Lock()
@@ -280,7 +280,7 @@ def read_data_new(
             break
         else:
             continue
-    batch_rename(save_by_batch)
+    batch_rename(save_by_batch, batch_count)
 
 
 def save_data(adj_mat, batch_start_index, bert_dim, binary_label, data, embed_encoder, embed_level, limit_author,

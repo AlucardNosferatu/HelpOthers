@@ -110,11 +110,11 @@ def get_mapper(
     return data, mapper
 
 
-def batch_rename(save_by_batch='Batches'):
+def batch_rename(save_by_batch='Batches', global_index=0):
     files = os.listdir(save_by_batch)
     files = [file for file in files if file.startswith('Input_') and file.endswith('.npy')]
-    global_index = 0
-    for i in range(len(files)):
+    first_level = list(set([file.split('_')[1] for file in files]))
+    for i in range(len(first_level)):
         subset = [file for file in files if file.startswith('Input_{}_'.format(i))]
         for j in range(len(subset)):
             os.rename(

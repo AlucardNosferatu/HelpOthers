@@ -30,7 +30,7 @@ def data_load(
         else:
             batch_saving_dir = None
         all_input, all_adj, all_output = read_data_adapter(
-            new=False,
+            new=True,
             data='../../Data/my_personality.csv',
             stop_after=stop_after,
             embed_level=embed_level,
