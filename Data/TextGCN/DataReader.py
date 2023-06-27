@@ -160,8 +160,10 @@ def read_file(
 def read_data_adapter(new=False, **kwargs):
     if new:
         read_data_new(**kwargs)
+        all_input, all_adj, all_output = None, None, None
     else:
-        read_data_old(**kwargs)
+        all_input, all_adj, all_output = read_data_old(**kwargs)
+    return all_input, all_adj, all_output
 
 
 def read_data_old(
@@ -245,6 +247,18 @@ def read_data_new(
         batch_count=0,
         saved_output=None
 ):
+    def has_alive(ts):
+        print('===============')
+        for thread in ts:
+            if thread.is_alive():
+                print('线程:', thread.user_id, '进行中')
+                return True
+            else:
+                print('线程:', thread.user_id, '已完成')
+        print('===============')
+        return False
+
+    _ = stop_after
     t_lock = threading.Lock()
     mapper_list = []
     adj_mat_list = []
@@ -261,6 +275,7 @@ def read_data_new(
         time.sleep(0.1)
     batch_start_index = 0
     break_after_empty = False
+    threads = []
     while True:
         time.sleep(0.1)
         if status[0] == 'RGL_FINISH':
@@ -277,6 +292,8 @@ def read_data_new(
                     limit_text, mapper, path_post_trained, read_file_action, save_by_batch, start_index, vocab_size
                 )
             )
+            setattr(sd_thread, 'user_id', batch_start_index)
+            threads.append(sd_thread)
             sd_thread.start()
             start_index = mapper['last_index'] + 1
             batch_start_index += 1
@@ -284,6 +301,8 @@ def read_data_new(
             break
         else:
             continue
+    while has_alive(threads):
+        time.sleep(10)
     batch_rename(save_by_batch, batch_count)
 
 

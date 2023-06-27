@@ -83,7 +83,7 @@ def model_train(
         step_per_epoch=100, val_split=0.25, workers=8
 ):
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5, decay=1e-7),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-5),
         loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy'],
         run_eagerly=True

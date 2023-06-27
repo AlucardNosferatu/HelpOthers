@@ -18,6 +18,7 @@ def build_processor(
         seq_len=32, use_post_trained=False, path_post_trained='Bert.h5', saved_output=None
 ):
     if use_post_trained:
+        print('使用后训练BERT来嵌入文本')
         masked_lm = tf.keras.models.load_model(
             path_post_trained,
             custom_objects={'BertMaskedLM': keras_nlp.models.BertMaskedLM}
@@ -42,6 +43,7 @@ def build_processor(
         # 重设向量维度
         processor.packer.sequence_length = seq_len
     else:
+        print('使用预训练BERT来嵌入文本')
         tokenizer = keras_nlp.models.BertTokenizer.from_preset("bert_tiny_en_uncased")
         processor = keras_nlp.models.BertPreprocessor(tokenizer=tokenizer, sequence_length=seq_len)
     if saved_output is not None:

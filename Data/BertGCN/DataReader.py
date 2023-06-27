@@ -18,6 +18,7 @@ def encoder_bert(a_index, mapper, t_index, graph):
     if processor is None:
         processor = build_processor(
             seq_len=mapper['bert_dim'],
+            use_post_trained=mapper['use_post_trained'],
             path_post_trained=mapper['path_post_trained'],
             saved_output=mapper['saved_output']
         )

@@ -21,9 +21,9 @@ if __name__ == '__main__':
         save_by_batch=True,
         bert_dim=bert_dim,
         binary_label=True,
-        start_index=9326,
-        batch_count=257,
-        saved_bert_encoded_vec='../../Data/BertGCN/SavedBertEmbedding.pkl'
+        start_index=0,
+        batch_count=0,
+        saved_bert_encoded_vec='../../Data/BertGCN/SavedBertEmbedding.pkl',
         # 切换yes/no或者分数数据
     )
     print('数据读取完毕')
