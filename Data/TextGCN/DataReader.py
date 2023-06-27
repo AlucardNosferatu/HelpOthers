@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 
 import numpy as np
@@ -6,8 +7,10 @@ import pandas as pd
 from tqdm import tqdm
 
 from Data.BertDNN.DataReader import unify_symbol, extract_parenthesis
-from Data.TextGCN.Graph import read_graph
-from Data.TextGCN.Utils import unify_word_form, get_mapper
+from Data.TextGCN.Graph import read_graph, read_graph_loop
+from Data.TextGCN.Utils import unify_word_form, get_mapper, batch_rename
+
+lock = threading.Lock()
 
 
 def encoder_onehot(a_index, mapper, t_index, word):
@@ -150,7 +153,14 @@ def read_file(
     return all_input, all_output, mapper, data
 
 
-def read_data(
+def read_data_adapter(new=False, **kwargs):
+    if new:
+        read_data_new(**kwargs)
+    else:
+        read_data_old(**kwargs)
+
+
+def read_data_old(
         vocab_size=128, limit_text=126, limit_author=2,
         start_index=0,
         data='../my_personality.csv',
@@ -170,12 +180,14 @@ def read_data(
     flag = True
     while flag:
         # 以下为训练数据生成的代码
+
         print('第一步：建立Batch的图并读取邻接矩阵')
         mapper, data, sym_ama, vis_ama = read_graph(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
             mapper=None, data=data, reset=True, bert_dim=bert_dim, path_post_trained=path_post_trained,
             saved_output=saved_output
         )
+
         print('第二步：读取Batch范围内的数据')
         batch_input, batch_output, mapper, data = read_file_action(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
@@ -184,11 +196,10 @@ def read_data(
             path_post_trained=path_post_trained
         )
         sym_ama_list = [sym_ama for _ in batch_input]
+
         batch_start_index = batch_count
         batch_count += len(batch_input)
-        # todo: 保存all_adj、all_input、all_output到文件
-        #  （一个大文件比较省磁盘空间，而且IO耗时小，但是占内存）
-        #  （多个小文件占用磁盘空间大，而且IO耗时也大，但是能大幅度减轻内存占用）
+
         if save_by_batch is not None:
             for i in range(len(batch_input)):
                 np.save(
@@ -204,15 +215,95 @@ def read_data(
                     np.array(batch_output[i])
                 )
         else:
+            lock.acquire()
             all_adj += sym_ama_list.copy()
             all_input += batch_input.copy()
             all_output += batch_output.copy()
+            lock.release()
         start_index = mapper['last_index'] + 1
         if batch_count >= stop_after:
             flag = False
         time.sleep(1)
         print('数据已采集：', batch_count, '/', stop_after)
     return all_input, all_adj, all_output
+
+
+def read_data_new(
+        vocab_size=128, limit_text=126, limit_author=2,
+        start_index=0,
+        data='../my_personality.csv',
+        stop_after=None,
+        read_file_action=read_file,
+        embed_level='word', embed_encoder=encoder_onehot,
+        save_by_batch=None,
+        bert_dim=8,
+        binary_label=False,
+        path_post_trained='../../Model/BertDNN/Bert.h5',
+        batch_count=None,
+        saved_output=None
+):
+    t_lock = threading.Lock()
+    mapper_list = []
+    adj_mat_list = []
+    status = []
+    rgl_thread = threading.Thread(
+        target=read_graph_loop,
+        args=(
+            adj_mat_list, bert_dim, data, limit_author, limit_text, mapper_list, path_post_trained, saved_output,
+            start_index, vocab_size, t_lock, status
+        )
+    )
+    rgl_thread.start()
+    while len(status) <= 0:
+        time.sleep(0.1)
+    batch_start_index = 0
+    break_after_empty = False
+    while True:
+        time.sleep(0.1)
+        if status[0] == 'RGL_FINISH':
+            break_after_empty = True
+        if len(mapper_list) > 0:
+            t_lock.acquire()
+            mapper = mapper_list.pop(0)
+            adj_mat = adj_mat_list.pop(0)
+            t_lock.release()
+            sd_thread = threading.Thread(
+                target=save_data,
+                args=(
+                    adj_mat, batch_start_index, bert_dim, binary_label, data, embed_encoder, embed_level, limit_author,
+                    limit_text, mapper, path_post_trained, read_file_action, save_by_batch, start_index, vocab_size
+                )
+            )
+            sd_thread.start()
+            batch_start_index += 1
+        elif break_after_empty:
+            break
+        else:
+            continue
+    batch_rename(save_by_batch)
+
+
+def save_data(adj_mat, batch_start_index, bert_dim, binary_label, data, embed_encoder, embed_level, limit_author,
+              limit_text, mapper, path_post_trained, read_file_action, save_by_batch, start_index, vocab_size):
+    batch_input, batch_output, _, _ = read_file_action(
+        start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
+        mapper=mapper, data=data, least_words=3, most_word=32, embed_level=embed_level,
+        embed_encoder=embed_encoder, bert_dim=bert_dim, binary_label=binary_label,
+        path_post_trained=path_post_trained
+    )
+    for i in range(len(batch_input)):
+        np.save(
+            os.path.join(save_by_batch, 'AdjMat_{}_{}.npy'.format(batch_start_index, i)),
+            np.array(adj_mat)
+        )
+        np.save(
+            os.path.join(save_by_batch, 'Input_{}_{}.npy'.format(batch_start_index, i)),
+            np.array(batch_input[i])
+        )
+        np.save(
+            os.path.join(save_by_batch, 'Output_{}_{}.npy'.format(batch_start_index, i)),
+            np.array(batch_output[i])
+        )
 
 
 if __name__ == '__main__':

@@ -21,8 +21,8 @@ if __name__ == '__main__':
         save_by_batch=True,
         bert_dim=bert_dim,
         binary_label=True,
-        start_index=7183,
-        batch_count=169,
+        start_index=9074,
+        batch_count=247,
         saved_bert_encoded_vec='../../Data/BertGCN/SavedBertEmbedding.pkl'
         # 切换yes/no或者分数数据
     )

@@ -188,5 +188,27 @@ def get_weights(mapper, lemmatizer, speller, stemmer):
     return tf_idf, vocab, pmi_pairs
 
 
+def read_graph_loop(
+        adj_mat_list, bert_dim, data, limit_author, limit_text, mapper_list, path_post_trained, saved_output,
+        start_index, vocab_size, t_lock, status
+):
+    while True:
+        mapper, data, sym_ama, vis_ama = read_graph(
+            start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
+            mapper=None, data=data, reset=True, bert_dim=bert_dim, path_post_trained=path_post_trained,
+            saved_output=saved_output
+        )
+        start_index = mapper['last_index'] + 1
+        t_lock.acquire()
+        mapper_list.append(mapper)
+        adj_mat_list.append(sym_ama)
+        t_lock.release()
+        if len(status) <= 0:
+            status.append('RGL_START')
+        if start_index >= data.shape[0]:
+            status[0] = 'RGL_FINISH'
+            break
+
+
 if __name__ == '__main__':
     print('Done')

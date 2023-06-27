@@ -1,6 +1,7 @@
 import os
 import pickle
 import random
+import threading
 
 import keras_nlp
 import numpy as np
@@ -8,6 +9,8 @@ import pandas as pd
 import tensorflow as tf
 from keras_nlp.src.layers import MaskedLMMaskGenerator
 from tqdm import tqdm
+
+lock = threading.Lock()
 
 
 def build_processor(
@@ -59,8 +62,10 @@ def tokenize(input_str, processor, save=True, load=True):
             res = res[0]
         vec = np.array(res['token_ids'])
         if save and hasattr(processor, 'saved_output'):
+            lock.acquire()
             processor.saved_output.__setitem__(input_str, vec)
             pickle.dump(processor.saved_output, open(processor.saved_output_path, 'wb'))
+            lock.release()
     return vec
 
 

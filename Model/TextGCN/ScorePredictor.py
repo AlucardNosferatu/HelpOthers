@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from Data.BertGCN.DataReader import batch_generator
-from Data.TextGCN.DataReader import read_data, encoder_onehot
+from Data.TextGCN.DataReader import encoder_onehot, read_data_adapter
 from Model.TextGCN.GNN import GraphConv
 
 
@@ -29,7 +29,8 @@ def data_load(
             batch_saving_dir = '../../Data/{}/Batches'.format(data_folder)
         else:
             batch_saving_dir = None
-        all_input, all_adj, all_output = read_data(
+        all_input, all_adj, all_output = read_data_adapter(
+            new=False,
             data='../../Data/my_personality.csv',
             stop_after=stop_after,
             embed_level=embed_level,

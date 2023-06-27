@@ -1,3 +1,4 @@
+import os
 import time
 
 import nltk
@@ -107,3 +108,29 @@ def get_mapper(
     if path_post_trained is not None:
         mapper.__setitem__('path_post_trained', path_post_trained)
     return data, mapper
+
+
+def batch_rename(save_by_batch='Batches'):
+    files = os.listdir(save_by_batch)
+    files = [file for file in files if file.startswith('Input_') and file.endswith('.npy')]
+    global_index = 0
+    for i in range(len(files)):
+        subset = [file for file in files if file.startswith('Input_{}_'.format(i))]
+        for j in range(len(subset)):
+            os.rename(
+                os.path.join(save_by_batch, 'Input_{}_{}.npy'.format(i, j)),
+                os.path.join(save_by_batch, 'Input_{}.npy'.format(global_index))
+            )
+            os.rename(
+                os.path.join(save_by_batch, 'Output_{}_{}.npy'.format(i, j)),
+                os.path.join(save_by_batch, 'Output_{}.npy'.format(global_index))
+            )
+            os.rename(
+                os.path.join(save_by_batch, 'AdjMat_{}_{}.npy'.format(i, j)),
+                os.path.join(save_by_batch, 'AdjMat_{}.npy'.format(global_index))
+            )
+            global_index += 1
+
+
+if __name__ == '__main__':
+    batch_rename()
