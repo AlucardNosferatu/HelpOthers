@@ -62,7 +62,10 @@ def data_load(
     return all_input, all_adj, all_output
 
 
-def model_build(feature_input=None, gc_num_outputs=512, dilate_dim=512, gc_count=16, adj_mat_dim=256, score_dim=5):
+def model_build(
+        feature_input=None, gc_num_outputs=512, dilate_dim=512, gc_count=4, adj_mat_dim=256, score_dim=5,
+        softmax_out=True
+):
     if feature_input is None:
         feature_input = tf.keras.Input(shape=(adj_mat_dim,))
     adjacent_matrix = tf.keras.Input(shape=(adj_mat_dim, adj_mat_dim))
@@ -73,7 +76,17 @@ def model_build(feature_input=None, gc_num_outputs=512, dilate_dim=512, gc_count
         x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.Dense(adj_mat_dim, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Flatten()(x)
-    outputs = tf.keras.layers.Dense(score_dim, activation=tf.nn.sigmoid)(x)
+    if softmax_out:
+        outs = []
+        for _ in range(score_dim):
+            out = tf.keras.layers.Dense(2, activation=tf.nn.softmax)(x)
+            # out = tf.keras.backend.argmax(out)
+            out = out[:, 0]
+            out = tf.keras.backend.expand_dims(out)
+            outs.append(out)
+        outputs = tf.keras.backend.concatenate(outs)
+    else:
+        outputs = tf.keras.layers.Dense(score_dim, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=[feature_input, adjacent_matrix], outputs=outputs)
     return model
 
