@@ -113,6 +113,7 @@ def get_mapper(
 def batch_rename(save_by_batch='Batches', global_index=0):
     files = os.listdir(save_by_batch)
     files = [file for file in files if file.startswith('Input_') and file.endswith('.npy')]
+    files = [file for file in files if file.count('_') == 2]
     first_level = list(set([file.split('_')[1] for file in files]))
     for i in range(len(first_level)):
         subset = [file for file in files if file.startswith('Input_{}_'.format(i))]
@@ -133,4 +134,4 @@ def batch_rename(save_by_batch='Batches', global_index=0):
 
 
 if __name__ == '__main__':
-    batch_rename()
+    batch_rename(global_index=10)
