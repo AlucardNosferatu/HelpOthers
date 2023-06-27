@@ -17,6 +17,17 @@ bert_lock = threading.Lock()
 def build_processor(
         seq_len=32, use_post_trained=False, path_post_trained='Bert.h5', saved_output=None
 ):
+    def check_consistency(sav, p):
+        key = random.choice(list(sav.keys()))
+        res = p(key)
+        if type(res) is not dict:
+            res = res[0]
+        vec = np.array(res['token_ids'])
+        if vec == sav[key]:
+            return True
+        else:
+            return False
+
     if use_post_trained:
         print('使用后训练BERT来嵌入文本')
         masked_lm = tf.keras.models.load_model(
@@ -50,6 +61,8 @@ def build_processor(
         setattr(processor, 'saved_output_path', saved_output)
         if os.path.exists(saved_output):
             saved_output = pickle.load(open(saved_output, 'rb'))
+            if not check_consistency(saved_output, processor):
+                saved_output = {}
         else:
             saved_output = {}
         setattr(processor, 'saved_output', saved_output)
