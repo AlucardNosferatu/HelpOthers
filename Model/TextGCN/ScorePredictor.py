@@ -108,7 +108,7 @@ def model_train(
         verbose=1,
         save_best_only=True,
     )
-    tb = tf.keras.callbacks.TensorBoard(histogram_freq=1, write_grads=True, update_freq='batch')
+    tb = tf.keras.callbacks.TensorBoard(histogram_freq=1, update_freq='batch')
     with tf.device('/gpu:0'):
         if use_generator:
             print('开始创建训练/测试数据生成器')
