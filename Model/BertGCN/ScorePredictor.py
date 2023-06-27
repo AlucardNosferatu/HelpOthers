@@ -11,9 +11,9 @@ if __name__ == '__main__':
     test = not train
     bert_dim = 32
     files_count = 325
-    print('开始读取数据，警告：生成新数据所需时间会非常漫长')
+    print('开始读取数据')
     all_input_, _, _ = data_load(
-        new_data=False,
+        new_data=True,
         stop_after=files_count,
         embed_level='graph',
         embed_encoder=encoder_bert,
@@ -21,7 +21,9 @@ if __name__ == '__main__':
         save_by_batch=True,
         bert_dim=bert_dim,
         binary_label=True,
-        start_index=0
+        start_index=7183,
+        batch_count=169,
+        saved_bert_encoded_vec='../../Data/BertGCN/SavedBertEmbedding.pkl'
         # 切换yes/no或者分数数据
     )
     print('数据读取完毕')

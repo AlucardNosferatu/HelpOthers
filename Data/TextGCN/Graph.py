@@ -1,7 +1,8 @@
 import time
 
+import numpy as np
 import pandas as pd
-from py2neo import Graph, Node, Relationship, NodeMatcher
+from py2neo import Graph, Node, Relationship, NodeMatcher, RelationshipMatcher
 from tqdm import tqdm
 
 from Data.TextGCN.Utils import unify_word_form, get_mapper
@@ -19,13 +20,19 @@ def clear_graph(graph=None):
 
 
 # 建立除w-w以外的关系
-def build_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv',
-                reset=True, bert_dim=8, path_post_trained='../../Model/BertDNN/Bert.h5'):
+def read_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv',
+               reset=True, bert_dim=8, path_post_trained='../../Model/BertDNN/Bert.h5', saved_output=None):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim, path_post_trained)
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim, path_post_trained,
+                                  saved_output)
     print('原始数据和Batch数据已载入')
+    word2index = mapper['w2i']
+    index2word = mapper['i2w']
+    text_count_list = mapper['tlist']
+    author_count_list = mapper['alist']
+    total_dim = mapper['total_dim']
     lemmatizer = None
     stemmer = None
     speller = None
@@ -41,15 +48,15 @@ def build_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128,
         row = data.iloc[index, :]
         text = row['STATUS'].lower()
         author = row['#AUTHID']
-        if text in mapper['tlist']:
-            t_index = mapper['tlist'].index(text)
+        if text in text_count_list:
+            t_index = text_count_list.index(text)
             text_node = Node("Text", name=str(t_index), content=text)
             graph.merge(text_node, 'Text', 'name')
         else:
             t_index = None
             text_node = None
-        if author in mapper['alist']:
-            a_index = mapper['alist'].index(author)
+        if author in author_count_list:
+            a_index = author_count_list.index(author)
             author_node = Node("Author", name=str(a_index), content=author)
             graph.merge(author_node, 'Author', 'name')
         else:
@@ -71,7 +78,7 @@ def build_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128,
                         speller
                     )
                     for word in text_slice.split(' '):
-                        if word in mapper['w2i'].keys():
+                        if word in word2index.keys():
                             if t_index is not None:
                                 word_node = Node("Word", name=word)
                                 graph.merge(word_node, 'Word', 'name')
@@ -94,7 +101,64 @@ def build_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128,
         graph.merge(ww, 'Word', 'name')
     time.sleep(1)
     print('词汇-词汇关系建立完毕')
-    return mapper, data
+
+    # matrix_order = 'author' + 'text' + 'word'
+    author_offset = 0
+    text_offset = len(author_count_list) + author_offset
+    word_offset = len(text_count_list) + text_offset
+
+    adj_matrix = []
+    matcher_rel = RelationshipMatcher(graph)
+    print('开始写入作者-文档关系到邻接矩阵')
+    for i in tqdm(range(len(author_count_list))):
+        adj_row = [0.0] * total_dim
+        adj_row[i] = 1.0
+        match_val = str(i)
+        node = matcher_node.match("Author", name=match_val).first()
+        texts = matcher_rel.match([node], r_type='write').all()
+        for text in texts:
+            text_index = int(text.end_node['name'])
+            adj_row[text_index + text_offset] = float(text['value'])
+        adj_matrix.append(adj_row)
+    time.sleep(1)
+    print('作者-文档关系已写入邻接矩阵')
+    print('开始写入文档-词汇关系到邻接矩阵')
+    for i in tqdm(range(len(text_count_list))):
+        adj_row = [0.0] * total_dim
+        adj_row[i + text_offset] = 1.0
+        match_val = str(i)
+        node = matcher_node.match("Text", name=match_val).first()
+        words = matcher_rel.match([None, node], r_type='in').all()
+        for word in words:
+            word_str = word.start_node['name']
+            word_index = word2index[word_str] - 1
+            adj_row[word_index + word_offset] = float(word['value'])
+        adj_matrix.append(adj_row)
+    while len(adj_matrix) < total_dim - vocab_size:
+        adj_matrix.append([0.0] * total_dim)
+    time.sleep(1)
+    print('文档-词汇关系已写入邻接矩阵')
+    print('开始写入词汇-词汇关系到邻接矩阵')
+    for i in tqdm(range(len(list(word2index.keys())))):
+        adj_row = [0.0] * total_dim
+        adj_row[i + word_offset] = 1.0
+        match_val = index2word[i + 1]
+        node = matcher_node.match("Word", name=match_val).first()
+        other_words = matcher_rel.match([node], r_type='near').all()
+        for word in other_words:
+            word_str = word.end_node['name']
+            word_index = word2index[word_str] - 1
+            adj_row[word_index + word_offset] = float(word['value'])
+        adj_matrix.append(adj_row)
+    time.sleep(1)
+    print('词汇-词汇关系已写入邻接矩阵，邻接矩阵已装填')
+    adj_matrix_array = np.array(adj_matrix)
+    sym_ama = adj_matrix_array + adj_matrix_array.transpose() - np.eye(total_dim)
+    print('邻接矩阵对称化已完成')
+    vis_ama = np.copy(sym_ama)
+    vis_ama -= np.min(vis_ama)
+    vis_ama /= np.max(vis_ama)
+    return mapper, data, sym_ama, vis_ama
 
 
 def get_weights(mapper, lemmatizer, speller, stemmer):

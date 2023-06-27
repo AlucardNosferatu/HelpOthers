@@ -1,4 +1,5 @@
 import os
+import pickle
 import random
 
 import keras_nlp
@@ -9,7 +10,9 @@ from keras_nlp.src.layers import MaskedLMMaskGenerator
 from tqdm import tqdm
 
 
-def build_processor(seq_len=32, use_post_trained=True, path_post_trained='Bert.h5'):
+def build_processor(
+        seq_len=32, use_post_trained=False, path_post_trained='Bert.h5', saved_output=None
+):
     if use_post_trained:
         masked_lm = tf.keras.models.load_model(
             path_post_trained,
@@ -37,14 +40,27 @@ def build_processor(seq_len=32, use_post_trained=True, path_post_trained='Bert.h
     else:
         tokenizer = keras_nlp.models.BertTokenizer.from_preset("bert_tiny_en_uncased")
         processor = keras_nlp.models.BertPreprocessor(tokenizer=tokenizer, sequence_length=seq_len)
+    if saved_output is not None:
+        setattr(processor, 'saved_output_path', saved_output)
+        if os.path.exists(saved_output):
+            saved_output = pickle.load(open(saved_output, 'rb'))
+        else:
+            saved_output = {}
+        setattr(processor, 'saved_output', saved_output)
     return processor
 
 
-def tokenize(input_str, processor):
-    res = processor(input_str)
-    if type(res) is not dict:
-        res = res[0]
-    vec = np.array(res['token_ids'])
+def tokenize(input_str, processor, save=True, load=True):
+    if load and hasattr(processor, 'saved_output') and input_str in processor.saved_output.keys():
+        vec = processor.saved_output[input_str]
+    else:
+        res = processor(input_str)
+        if type(res) is not dict:
+            res = res[0]
+        vec = np.array(res['token_ids'])
+        if save and hasattr(processor, 'saved_output'):
+            processor.saved_output.__setitem__(input_str, vec)
+            pickle.dump(processor.saved_output, open(processor.saved_output_path, 'wb'))
     return vec
 
 

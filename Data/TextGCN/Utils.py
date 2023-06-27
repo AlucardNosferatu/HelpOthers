@@ -82,10 +82,13 @@ def limit_vocab(text_count_list, vocab_size):
     return word2index, index2word
 
 
-def get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim=8, path_post_trained=None):
+def get_mapper(
+        start_index, data, limit_author, limit_text, vocab_size, bert_dim=8, path_post_trained=None, saved_output=None
+):
     print('提取Batch文档及作者')
-    data, text_count_list, author_count_list, last_index = count_total(start_index, data=data, limit_text=limit_text,
-                                                                       limit_author=limit_author)
+    data, text_count_list, author_count_list, last_index = count_total(
+        start_index, data=data, limit_text=limit_text, limit_author=limit_author
+    )
     time.sleep(1)
     print('Batch文档及作者已提取')
     print('提取Batch词汇')
@@ -98,7 +101,8 @@ def get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim
         'alist': author_count_list,
         'total_dim': limit_author + limit_text + vocab_size,
         'last_index': last_index,
-        'bert_dim': bert_dim
+        'bert_dim': bert_dim,
+        'saved_output': saved_output
     }
     if path_post_trained is not None:
         mapper.__setitem__('path_post_trained', path_post_trained)

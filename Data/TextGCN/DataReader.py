@@ -5,10 +5,9 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from Data.TextGCN.GraphBuilder import build_graph
-from Data.TextGCN.GraphReader import read_graph
-from Data.TextGCN.Utils import unify_word_form, get_mapper
 from Data.BertDNN.DataReader import unify_symbol, extract_parenthesis
+from Data.TextGCN.Graph import read_graph
+from Data.TextGCN.Utils import unify_word_form, get_mapper
 
 
 def encoder_onehot(a_index, mapper, t_index, word):
@@ -152,31 +151,30 @@ def read_file(
 
 
 def read_data(
-        vocab_size=128,
-        limit_text=126,
-        limit_author=2,
+        vocab_size=128, limit_text=126, limit_author=2,
         start_index=0,
         data='../my_personality.csv',
         stop_after=2048,
         read_file_action=read_file,
-        embed_level='word',
-        embed_encoder=encoder_onehot,
+        embed_level='word', embed_encoder=encoder_onehot,
         save_by_batch=None,
         bert_dim=8,
         binary_label=False,
-        path_post_trained='../../Model/BertDNN/Bert.h5'
+        path_post_trained='../../Model/BertDNN/Bert.h5',
+        batch_count=0,
+        saved_output=None
 ):
     all_adj = []
     all_input = []
     all_output = []
     flag = True
-    batch_count = 0
     while flag:
         # 以下为训练数据生成的代码
-        print('第一步：建立Batch的图')
-        mapper, data = build_graph(
+        print('第一步：建立Batch的图并读取邻接矩阵')
+        mapper, data, sym_ama, vis_ama = read_graph(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-            mapper=None, data=data, reset=True, bert_dim=bert_dim, path_post_trained=path_post_trained
+            mapper=None, data=data, reset=True, bert_dim=bert_dim, path_post_trained=path_post_trained,
+            saved_output=saved_output
         )
         print('第二步：读取Batch范围内的数据')
         batch_input, batch_output, mapper, data = read_file_action(
@@ -184,11 +182,6 @@ def read_data(
             mapper=mapper, data=data, least_words=3, most_word=32, embed_level=embed_level,
             embed_encoder=embed_encoder, bert_dim=bert_dim, binary_label=binary_label,
             path_post_trained=path_post_trained
-        )
-        print('第三步：从Batch的图读取邻接矩阵')
-        sym_ama, vis_ama, mapper, data = read_graph(
-            start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-            mapper=mapper, data=data, path_post_trained=path_post_trained
         )
         sym_ama_list = [sym_ama for _ in batch_input]
         batch_start_index = batch_count

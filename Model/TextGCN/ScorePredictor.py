@@ -19,9 +19,12 @@ def data_load(
         bert_dim=8,
         binary_label=False,
         start_index=0,
-        path_post_trained='../BertDNN/Bert.h5'
+        batch_count=0,
+        path_post_trained='../BertDNN/Bert.h5',
+        saved_bert_encoded_vec=None
 ):
     if new_data:
+        print('警告：生成新数据所需时间会非常漫长')
         if save_by_batch:
             batch_saving_dir = '../../Data/{}/Batches'.format(data_folder)
         else:
@@ -35,7 +38,9 @@ def data_load(
             bert_dim=bert_dim,
             binary_label=binary_label,
             start_index=start_index,
-            path_post_trained=path_post_trained
+            path_post_trained=path_post_trained,
+            batch_count=batch_count,
+            saved_output=saved_bert_encoded_vec
         )
         if not save_by_batch:
             all_input = np.array(all_input)
@@ -77,7 +82,7 @@ def model_train(
         step_per_epoch=100, val_split=0.25, workers=8
 ):
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-7),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5, decay=1e-7),
         loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy'],
         run_eagerly=True
@@ -89,6 +94,7 @@ def model_train(
         verbose=1,
         save_best_only=True,
     )
+    tb = tf.keras.callbacks.TensorBoard(histogram_freq=1, write_grads=True, update_freq='batch')
     with tf.device('/gpu:0'):
         if use_generator:
             print('开始创建训练/测试数据生成器')
@@ -116,7 +122,7 @@ def model_train(
             model.fit(
                 x=gen_train,
                 epochs=10000,
-                callbacks=[ckpt],
+                callbacks=[ckpt, tb],
                 shuffle=True,
                 steps_per_epoch=step_per_epoch,
                 validation_data=gen_test,
@@ -129,7 +135,7 @@ def model_train(
                 y=all_output,
                 batch_size=batch_size,
                 epochs=10000,
-                callbacks=[ckpt],
+                callbacks=[ckpt, tb],
                 shuffle=True,
                 validation_split=val_split
             )
