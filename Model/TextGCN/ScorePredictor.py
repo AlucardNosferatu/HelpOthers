@@ -49,7 +49,6 @@ def data_load(
             np.save('../../Data/{}/Output.npy'.format(data_folder), all_output)
             np.save('../../Data/{}/AdjMat.npy'.format(data_folder), all_adj)
     if save_by_batch:
-
         all_input = batch_generator
         all_output = None
         all_adj = None
@@ -111,7 +110,7 @@ def model_train(
         if use_generator:
             print('开始创建训练/测试数据生成器')
             shapes = [
-                (32, 256),
+                (128, 256),
                 (256, 256),
                 (5,)
             ]

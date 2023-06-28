@@ -24,7 +24,7 @@ def encoder_bert(a_index, mapper, t_index, graph):
             saved_output=mapper['saved_output']
         )
     lock.release()
-    text_vec = embed(graph, processor)
+    text_vec = np.squeeze(embed(graph, processor), axis=0)
     text_vec = text_vec.astype(float)
     _ = a_index
     _ = t_index
@@ -113,16 +113,16 @@ def read_by_threads(batch_adj, batch_input, batch_output, batch_size, data_folde
         time.sleep(0.01)
 
 
-def read_by_thread(batch_adj, batch_input, batch_output, data_folder, indices, lock):
+def read_by_thread(batch_adj, batch_input, batch_output, data_folder, indices, batch_sync):
     for index in indices:
         slice_input = np.load(os.path.join(data_folder, 'Input_{}.npy'.format(index)))
         slice_adj = np.load(os.path.join(data_folder, 'AdjMat_{}.npy'.format(index)))
         slice_output = np.load(os.path.join(data_folder, 'Output_{}.npy'.format(index)))
-        lock.acquire()
+        batch_sync.acquire()
         batch_input.append(slice_input)
         batch_adj.append(slice_adj)
         batch_output.append(slice_output)
-        lock.release()
+        batch_sync.release()
 
 
 if __name__ == '__main__':

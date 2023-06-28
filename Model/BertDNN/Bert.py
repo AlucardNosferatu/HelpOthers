@@ -4,6 +4,7 @@ import random
 import threading
 
 import keras_nlp
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tqdm import tqdm
@@ -12,14 +13,24 @@ file_lock = threading.Lock()
 bert_lock = threading.Lock()
 
 
+def embed_right_now(bert_in, mlm):
+    bert_lock.acquire()
+    res = mlm.preprocessor(bert_in)
+    bert_lock.release()
+    bert_lock.acquire()
+    res = mlm.backbone(res)
+    bert_lock.release()
+    bert_out = res['pooled_output'].numpy()
+    return bert_out
+
+
 def build_processor(
         use_post_trained=False, path_post_trained='Bert.h5', saved_output=None
 ):
     def check_consistency(sav, mlm):
         key = random.choice(list(sav.keys()))
-        res = mlm.preprocessor([key])
-        vec = mlm.backbone(res)['pooled_output'].numpy()[0].tolist()
-        if vec == sav[key]:
+        vec = embed_right_now([key], mlm)
+        if np.all(vec == sav[key]):
             return True
         else:
             return False
@@ -60,27 +71,32 @@ def build_processor(
 
 
 def embed(input_str, masked_lm, save=True, load=True):
-    if load:
+    def save_to_file(mlm, bert_in, bert_out):
         bert_lock.acquire()
-        hit = hasattr(masked_lm, 'saved_output') and input_str in masked_lm.saved_output.keys()
-        bert_lock.release()
-        if hit:
-            vec = masked_lm.saved_output[input_str]
-            return vec
-    bert_lock.acquire()
-    res = masked_lm.preprocessor([input_str])
-    bert_lock.release()
-    bert_lock.acquire()
-    res = masked_lm.backbone(res)
-    bert_lock.release()
-    vec = res['pooled_output'].numpy()[0].tolist()
-    if save and hasattr(masked_lm, 'saved_output'):
-        bert_lock.acquire()
-        masked_lm.saved_output.__setitem__(input_str, vec)
+        mlm.saved_output.__setitem__(bert_in, bert_out)
         bert_lock.release()
         file_lock.acquire()
-        pickle.dump(masked_lm.saved_output, open(masked_lm.saved_output_path, 'wb'))
+        pickle.dump(mlm.saved_output, open(mlm.saved_output_path, 'wb'))
         file_lock.release()
+
+    if type(input_str) is str:
+        input_str = [input_str]
+    if load:
+        vec_list = []
+        for child in input_str:
+            bert_lock.acquire()
+            hit = hasattr(masked_lm, 'saved_output') and child in masked_lm.saved_output.keys()
+            bert_lock.release()
+            if hit:
+                vec = masked_lm.saved_output[child]
+            else:
+                vec = np.squeeze(embed_right_now([child], masked_lm), axis=0)
+                if save and hasattr(masked_lm, 'saved_output'):
+                    save_to_file(masked_lm, child, vec)
+            vec_list.append(vec)
+        vec = np.array(vec_list)
+    else:
+        vec = embed_right_now(input_str, masked_lm)
     return vec
 
 
@@ -164,8 +180,8 @@ def bert_test(use_post_trained=True, batch_test=True):
 
 
 if __name__ == '__main__':
-    # bert_train()
-    bert_test(use_post_trained=True, batch_test=True)
-    bert_test(use_post_trained=True, batch_test=False)
-    bert_test(use_post_trained=False, batch_test=True)
-    bert_test(use_post_trained=False, batch_test=False)
+    bert_train()
+    # bert_test(use_post_trained=True, batch_test=True)
+    # bert_test(use_post_trained=True, batch_test=False)
+    # bert_test(use_post_trained=False, batch_test=True)
+    # bert_test(use_post_trained=False, batch_test=False)

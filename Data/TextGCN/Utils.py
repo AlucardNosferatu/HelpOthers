@@ -102,7 +102,6 @@ def get_mapper(
         'alist': author_count_list,
         'total_dim': limit_author + limit_text + vocab_size,
         'last_index': last_index,
-        'bert_dim': 128,
         'saved_output': saved_output,
         'use_post_trained': False,
         'path_post_trained': path_post_trained

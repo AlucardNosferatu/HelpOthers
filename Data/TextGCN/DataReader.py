@@ -110,11 +110,11 @@ def read_file(
                 all_output.append(np.array(prev_score))
                 graph_batch.clear()
             while len(graph_batch) < limit_author:
-                graph_batch.append([1.0] * mapper['bert_dim'])
+                graph_batch.append([1.0] * len(embed_vec))
             while len(graph_batch) < limit_author + limit_text:
-                graph_batch.append([0.0] * mapper['bert_dim'])
+                graph_batch.append([0.0] * len(embed_vec))
             while len(graph_batch) < mapper['total_dim']:
-                graph_batch.append([1.0] * mapper['bert_dim'])
+                graph_batch.append([1.0] * len(embed_vec))
             graph_batch[t_index] = embed_vec
             prev_author = author
             prev_score = score

@@ -22,8 +22,8 @@ if __name__ == '__main__':
         start_index=0,
         batch_count=0,
         saved_bert_encoded_vec='../../Data/BertGCN/SavedBertEmbedding.pkl',
-        # path_post_trained=None
-        path_post_trained='../BertDNN/Bert.h5'
+        path_post_trained=None
+        # path_post_trained='../BertDNN/Bert.h5'
         # 切换yes/no或者分数数据
     )
     print('数据读取完毕')
@@ -32,7 +32,7 @@ if __name__ == '__main__':
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
         print('模型已读取')
     else:
-        model_ = model_build(feature_input=tf.keras.Input(shape=(bert_dim, 256)))
+        model_ = model_build(feature_input=tf.keras.Input(shape=(128, 256)))
         print('模型已建立')
     tf.keras.utils.plot_model(model_, 'BertGCN.png', show_shapes=True, expand_nested=True, show_layer_activations=True)
     if train:
