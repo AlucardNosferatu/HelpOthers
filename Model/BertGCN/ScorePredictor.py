@@ -1,3 +1,4 @@
+import datetime
 import os
 
 import tensorflow as tf
@@ -7,6 +8,7 @@ from Model.TextGCN.GNN import GraphConv
 from Model.TextGCN.ScorePredictor import data_load, model_build, model_train, model_test
 
 if __name__ == '__main__':
+    start_time = datetime.datetime.now()
     train = True
     test = not train
     files_count = 325
@@ -18,7 +20,7 @@ if __name__ == '__main__':
         embed_encoder=encoder_bert,
         data_folder='BertGCN',
         save_by_batch=True,
-        binary_label=False,
+        binary_label=True,
         start_index=0,
         batch_count=0,
         saved_bert_encoded_vec='../../Data/BertGCN/SavedBertEmbedding.pkl',
@@ -27,6 +29,9 @@ if __name__ == '__main__':
         # 切换yes/no或者分数数据
     )
     print('数据读取完毕')
+    end_time = datetime.datetime.now()
+    delta_time = end_time - start_time
+    print('耗时:', delta_time)
     print('开始模型初始化')
     if os.path.exists('ScorePredictor.h5'):
         model_ = tf.keras.models.load_model('ScorePredictor.h5', custom_objects={'GraphConv': GraphConv})
