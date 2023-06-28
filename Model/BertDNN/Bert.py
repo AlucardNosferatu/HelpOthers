@@ -73,11 +73,11 @@ def build_processor(
 def embed(input_str, masked_lm, save=True, load=True):
     def save_to_file(mlm, bert_in, bert_out):
         bert_lock.acquire()
-        mlm.saved_output.__setitem__(bert_in, bert_out)
-        bert_lock.release()
         file_lock.acquire()
+        mlm.saved_output.__setitem__(bert_in, bert_out)
         pickle.dump(mlm.saved_output, open(mlm.saved_output_path, 'wb'))
         file_lock.release()
+        bert_lock.release()
 
     if type(input_str) is str:
         input_str = [input_str]
