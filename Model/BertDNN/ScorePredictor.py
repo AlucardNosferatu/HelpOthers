@@ -6,7 +6,7 @@ import pandas as pd
 import tensorflow as tf
 
 from Data.BertDNN.DataReader import read_file, unify_symbol, extract_parenthesis
-from Bert import build_processor, tokenize
+from Bert import build_processor, embed
 
 
 def data_load(new_data=False):
@@ -55,7 +55,7 @@ def model_train(model, all_input, all_output):
 
 def model_test(model, processor=None, data_file_path='my_personality.csv', least_words=3, most_word=30):
     if processor is None:
-        processor = build_processor(seq_len=32)
+        processor = build_processor()
     data_csv = pd.read_csv(data_file_path)
     flag = True
     while flag:
@@ -75,7 +75,7 @@ def model_test(model, processor=None, data_file_path='my_personality.csv', least
             for text_slice in text_slices:
                 if least_words < len(text_slice.split(' ')) < most_word:
                     print('text:', text_slice.lower())
-                    embedding = tokenize([text_slice.lower()], processor)
+                    embedding = embed([text_slice.lower()], processor)
                     res = model.predict(x=embedding) * 5
                     print('pred:', res.tolist()[0])
                     print('true:', score)

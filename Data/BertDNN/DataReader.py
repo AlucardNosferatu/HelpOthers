@@ -3,7 +3,7 @@ import pandas as pd
 
 from tqdm import tqdm
 
-from Model.BertDNN.Bert import tokenize, build_processor
+from Model.BertDNN.Bert import embed, build_processor
 
 
 def unify_symbol(text):
@@ -59,7 +59,7 @@ def extract_parenthesis(text, texts=None):
 
 def read_file(data_file_path='my_personality.csv', processor=None, tokenize_batch=32, least_words=3, most_word=30):
     if processor is None:
-        processor = build_processor(seq_len=32)
+        processor = build_processor()
     data_csv = pd.read_csv(data_file_path)
     all_input = []
     all_output = []
@@ -83,13 +83,13 @@ def read_file(data_file_path='my_personality.csv', processor=None, tokenize_batc
                     all_output.append(score_vec)
                     temp_list.append(text_slice.lower())
                     if len(temp_list) >= tokenize_batch:
-                        text_vec = tokenize(temp_list, processor)
+                        text_vec = embed(temp_list, processor)
                         for i in range(tokenize_batch):
                             all_input.append(text_vec[i, :])
                         temp_list.clear()
                         assert len(all_input) == len(all_output)
     if len(temp_list) > 0:
-        text_vec = tokenize(temp_list, processor)
+        text_vec = embed(temp_list, processor)
         for i in range(len(temp_list)):
             all_input.append(text_vec[i, :])
         temp_list.clear()

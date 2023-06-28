@@ -58,14 +58,13 @@ def read_file(
         most_word=30,
         embed_level='word',
         embed_encoder=encoder_onehot,
-        bert_dim=8,
         binary_label=False,
         path_post_trained='../../Model/BertDNN/Bert.h5'
 ):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim, path_post_trained)
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, path_post_trained)
     print('原始数据和Batch数据已载入')
     lemmatizer = None
     stemmer = None
@@ -174,7 +173,6 @@ def read_data_old(
         read_file_action=read_file,
         embed_level='word', embed_encoder=encoder_onehot,
         save_by_batch=None,
-        bert_dim=8,
         binary_label=False,
         path_post_trained='../../Model/BertDNN/Bert.h5',
         batch_count=0,
@@ -189,7 +187,7 @@ def read_data_old(
         print('第一步：建立Batch的图并读取邻接矩阵')
         mapper, data, sym_ama, vis_ama = read_graph(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-            mapper=None, data=data, reset=True, bert_dim=bert_dim, path_post_trained=path_post_trained,
+            mapper=None, data=data, reset=True, path_post_trained=path_post_trained,
             saved_output=saved_output
         )
 
@@ -197,7 +195,7 @@ def read_data_old(
         batch_input, batch_output, mapper, data = read_file_action(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
             mapper=mapper, data=data, least_words=3, most_word=32, embed_level=embed_level,
-            embed_encoder=embed_encoder, bert_dim=bert_dim, binary_label=binary_label,
+            embed_encoder=embed_encoder, binary_label=binary_label,
             path_post_trained=path_post_trained
         )
         sym_ama_list = [sym_ama for _ in batch_input]
@@ -241,7 +239,6 @@ def read_data_new(
         read_file_action=read_file,
         embed_level='word', embed_encoder=encoder_onehot,
         save_by_batch=None,
-        bert_dim=8,
         binary_label=False,
         path_post_trained='../../Model/BertDNN/Bert.h5',
         batch_count=0,
@@ -274,7 +271,7 @@ def read_data_new(
     rgl_thread = threading.Thread(
         target=read_graph_loop,
         args=(
-            adj_mat_list, bert_dim, data, limit_author, limit_text, mapper_list, path_post_trained, saved_output,
+            adj_mat_list, data, limit_author, limit_text, mapper_list, path_post_trained, saved_output,
             start_index, vocab_size, t_lock, status
         )
     )
@@ -297,7 +294,7 @@ def read_data_new(
             sd_thread = threading.Thread(
                 target=save_data,
                 args=(
-                    adj_mat, batch_start_index, bert_dim, binary_label, data, embed_encoder, embed_level, limit_author,
+                    adj_mat, batch_start_index, binary_label, data, embed_encoder, embed_level, limit_author,
                     limit_text, mapper, path_post_trained, read_file_action, save_by_batch, start_index, vocab_size
                 )
             )
@@ -315,14 +312,13 @@ def read_data_new(
     batch_rename(save_by_batch, batch_count)
 
 
-def save_data(adj_mat, batch_start_index, bert_dim, binary_label, data, embed_encoder, embed_level, limit_author,
+def save_data(adj_mat, batch_start_index, binary_label, data, embed_encoder, embed_level, limit_author,
               limit_text, mapper, path_post_trained, read_file_action, save_by_batch, start_index, vocab_size):
     print('线程:', batch_start_index, '已启动')
     batch_input, batch_output, _, _ = read_file_action(
         start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
         mapper=mapper, data=data, least_words=3, most_word=32, embed_level=embed_level,
-        embed_encoder=embed_encoder, bert_dim=bert_dim, binary_label=binary_label,
-        path_post_trained=path_post_trained
+        embed_encoder=embed_encoder, binary_label=binary_label, path_post_trained=path_post_trained
     )
     print('线程:', batch_start_index, '特征矩阵已生成')
     for i in range(len(batch_input)):

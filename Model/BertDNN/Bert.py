@@ -4,10 +4,8 @@ import random
 import threading
 
 import keras_nlp
-import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras_nlp.src.layers import MaskedLMMaskGenerator
 from tqdm import tqdm
 
 file_lock = threading.Lock()
@@ -15,15 +13,13 @@ bert_lock = threading.Lock()
 
 
 def build_processor(
-        seq_len=32, use_post_trained=False, path_post_trained='Bert.h5', saved_output=None
+        use_post_trained=False, path_post_trained='Bert.h5', saved_output=None
 ):
-    def check_consistency(sav, p):
+    def check_consistency(sav, mlm):
         key = random.choice(list(sav.keys()))
-        res = p(key)
-        if type(res) is not dict:
-            res = res[0]
-        vec = np.array(res['token_ids'])
-        if (vec == sav[key]).all:
+        res = mlm.preprocessor([key])
+        vec = mlm.backbone(res)['pooled_output'].numpy()[0].tolist()
+        if vec == sav[key]:
             return True
         else:
             return False
@@ -34,62 +30,69 @@ def build_processor(
             path_post_trained,
             custom_objects={'BertMaskedLM': keras_nlp.models.BertMaskedLM}
         )
-        processor = masked_lm.preprocessor
-        tokenizer = processor.tokenizer
-        processor.mask_selection_rate = 0.0
-        # MLM自带的预处理器是会把文本里面的词Mask掉的，一定要更换masker成员，否则训练数据都会带[MASK]
-        processor.masker = MaskedLMMaskGenerator(
-            mask_selection_rate=0.0,
-            mask_selection_length=96,
-            mask_token_rate=0.0,
-            random_token_rate=0.0,
-            vocabulary_size=tokenizer.vocabulary_size(),
-            mask_token_id=tokenizer.mask_token_id,
-            unselectable_token_ids=[
-                tokenizer.cls_token_id,
-                tokenizer.sep_token_id,
-                tokenizer.pad_token_id,
-            ],
-        )
-        # 重设向量维度
-        processor.packer.sequence_length = seq_len
     else:
         print('使用预训练BERT来嵌入文本')
-        tokenizer = keras_nlp.models.BertTokenizer.from_preset("bert_tiny_en_uncased")
-        processor = keras_nlp.models.BertPreprocessor(tokenizer=tokenizer, sequence_length=seq_len)
+        masked_lm = keras_nlp.models.BertMaskedLM.from_preset(
+            "bert_tiny_en_uncased"
+        )
+    masked_lm.preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncased")
     if saved_output is not None:
-        setattr(processor, 'saved_output_path', saved_output)
+        setattr(masked_lm, 'saved_output_path', saved_output)
         if os.path.exists(saved_output):
             saved_output = pickle.load(open(saved_output, 'rb'))
-            if not check_consistency(saved_output, processor):
+            consist = True
+            print('缓存随机校验开始')
+            for _ in range(8):
+                if check_consistency(saved_output, masked_lm):
+                    continue
+                else:
+                    consist = False
+                    break
+            if not consist:
+                print('缓存随机校验失败，清空缓存')
                 saved_output = {}
+            else:
+                print('缓存随机校验成功')
         else:
             saved_output = {}
-        setattr(processor, 'saved_output', saved_output)
-    return processor
+        setattr(masked_lm, 'saved_output', saved_output)
+    return masked_lm
 
 
-def tokenize(input_str, processor, save=True, load=True):
-    if load and hasattr(processor, 'saved_output') and input_str in processor.saved_output.keys():
-        vec = processor.saved_output[input_str]
-    else:
+def embed(input_str, masked_lm, save=True, load=True):
+    if load:
         bert_lock.acquire()
-        res = processor(input_str)
+        hit = hasattr(masked_lm, 'saved_output') and input_str in masked_lm.saved_output.keys()
         bert_lock.release()
-        if type(res) is not dict:
-            res = res[0]
-        vec = np.array(res['token_ids'])
-        if save and hasattr(processor, 'saved_output'):
-            file_lock.acquire()
-            processor.saved_output.__setitem__(input_str, vec)
-            pickle.dump(processor.saved_output, open(processor.saved_output_path, 'wb'))
-            file_lock.release()
+        if hit:
+            vec = masked_lm.saved_output[input_str]
+            return vec
+    bert_lock.acquire()
+    res = masked_lm.preprocessor([input_str])
+    bert_lock.release()
+    bert_lock.acquire()
+    res = masked_lm.backbone(res)
+    bert_lock.release()
+    vec = res['pooled_output'].numpy()[0].tolist()
+    if save and hasattr(masked_lm, 'saved_output'):
+        bert_lock.acquire()
+        masked_lm.saved_output.__setitem__(input_str, vec)
+        bert_lock.release()
+        file_lock.acquire()
+        pickle.dump(masked_lm.saved_output, open(masked_lm.saved_output_path, 'wb'))
+        file_lock.release()
+    return vec
+
+
+def tokenize(input_str, processor):
+    res = processor.preprocessor(input_str)
+    vec = res['token_ids']
     return vec
 
 
 def detokenize(input_vec, processor):
     batch = len(input_vec.shape) == 2
-    text = processor.tokenizer.detokenize(input_vec)
+    text = processor.preprocessor.tokenizer.detokenize(input_vec)
     if not batch:
         text = [text]
     text = [item.numpy().decode('utf-8').split(' [SEP] ')[0].replace('[CLS] ', '') for item in text]
@@ -135,7 +138,10 @@ def bert_train(data='../../Data/my_personality.csv'):
 
 
 def bert_test(use_post_trained=True, batch_test=True):
-    processor_ = build_processor(use_post_trained=use_post_trained)
+    processor_ = build_processor(
+        use_post_trained=use_post_trained, path_post_trained='Bert.h5',
+        saved_output='../../Data/BertGCN/SavedBertEmbedding.pkl'
+    )
     old_txt = [
         'I miss Carol a lot. Where is she now?',
         'We should be together.'
@@ -158,8 +164,8 @@ def bert_test(use_post_trained=True, batch_test=True):
 
 
 if __name__ == '__main__':
-    bert_train()
-    # bert_test(use_post_trained=True, batch_test=True)
-    # bert_test(use_post_trained=True, batch_test=False)
-    # bert_test(use_post_trained=False, batch_test=True)
-    # bert_test(use_post_trained=False, batch_test=False)
+    # bert_train()
+    bert_test(use_post_trained=True, batch_test=True)
+    bert_test(use_post_trained=True, batch_test=False)
+    bert_test(use_post_trained=False, batch_test=True)
+    bert_test(use_post_trained=False, batch_test=False)

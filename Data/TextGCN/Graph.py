@@ -21,11 +21,11 @@ def clear_graph(graph=None):
 
 # 建立除w-w以外的关系
 def read_graph(start_index, vocab_size=4096, limit_text=2048, limit_author=128, mapper=None, data='my_personality.csv',
-               reset=True, bert_dim=8, path_post_trained='../../Model/BertDNN/Bert.h5', saved_output=None):
+               reset=True, path_post_trained='../../Model/BertDNN/Bert.h5', saved_output=None):
     if type(data) is str:
         data = pd.read_csv(data)
     if mapper is None:
-        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, bert_dim, path_post_trained,
+        data, mapper = get_mapper(start_index, data, limit_author, limit_text, vocab_size, path_post_trained,
                                   saved_output)
     print('原始数据和Batch数据已载入')
     word2index = mapper['w2i']
@@ -189,13 +189,13 @@ def get_weights(mapper, lemmatizer, speller, stemmer):
 
 
 def read_graph_loop(
-        adj_mat_list, bert_dim, data, limit_author, limit_text, mapper_list, path_post_trained, saved_output,
+        adj_mat_list, data, limit_author, limit_text, mapper_list, path_post_trained, saved_output,
         start_index, vocab_size, t_lock, status
 ):
     while True:
         mapper, data, sym_ama, vis_ama = read_graph(
             start_index=start_index, vocab_size=vocab_size, limit_text=limit_text, limit_author=limit_author,
-            mapper=None, data=data, reset=True, bert_dim=bert_dim, path_post_trained=path_post_trained,
+            mapper=None, data=data, reset=True, path_post_trained=path_post_trained,
             saved_output=saved_output
         )
         start_index = mapper['last_index'] + 1

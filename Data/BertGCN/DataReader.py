@@ -6,23 +6,25 @@ import time
 import numpy as np
 from tqdm import tqdm
 
-from Model.BertDNN.Bert import build_processor, tokenize
+from Model.BertDNN.Bert import build_processor, embed
 
 processor = None
 train_list = None
 test_list = None
+lock = threading.Lock()
 
 
 def encoder_bert(a_index, mapper, t_index, graph):
     global processor
+    lock.acquire()
     if processor is None:
         processor = build_processor(
-            seq_len=mapper['bert_dim'],
             use_post_trained=mapper['use_post_trained'],
             path_post_trained=mapper['path_post_trained'],
             saved_output=mapper['saved_output']
         )
-    text_vec = tokenize(graph, processor)
+    lock.release()
+    text_vec = embed(graph, processor)
     text_vec = text_vec.astype(float)
     _ = a_index
     _ = t_index
