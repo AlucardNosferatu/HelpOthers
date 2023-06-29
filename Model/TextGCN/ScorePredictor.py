@@ -60,15 +60,20 @@ def data_load(
 
 
 def model_build(
-        feature_input=None, gc_count=16, adj_mat_dim=256, score_dim=5
+        feature_input=None, gc_count=4, adj_mat_dim=256, score_dim=5
 ):
     if feature_input is None:
         feature_input = tf.keras.Input(shape=(adj_mat_dim,))
     adjacent_matrix = tf.keras.Input(shape=(adj_mat_dim, adj_mat_dim))
     x = feature_input
-    for _ in range(gc_count):
+    x = tf.keras.layers.BatchNormalization()(x)
+    residual = x
+    for i in range(gc_count):
         x = GraphConv(num_outputs=adj_mat_dim)([x, adjacent_matrix])
-        x = tf.keras.layers.BatchNormalization()(x)
+        if i % 1 == 0:
+            x += residual
+            residual = x
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Flatten()(x)
     outputs = tf.keras.layers.Dense(score_dim, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=[feature_input, adjacent_matrix], outputs=outputs)
@@ -77,10 +82,10 @@ def model_build(
 
 def model_train(
         model, all_input, all_adj, all_output, use_generator=False, gen_files_count=8192, batch_size=2048,
-        step_per_epoch=100, val_split=0.25, workers=8
+        step_per_epoch=5, val_split=0.25, workers=8
 ):
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-4),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-5),
         loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy'],
         run_eagerly=True
