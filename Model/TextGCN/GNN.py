@@ -6,12 +6,11 @@ import tensorflow as tf
 
 class GraphConv(tf.keras.layers.Layer):
 
-    def __init__(self, num_outputs, activation="sigmoid", **kwargs):
+    def __init__(self, num_outputs, **kwargs):
         super(GraphConv, self).__init__(**kwargs)
         self.bias = None
         self.W = None
         self.num_outputs = num_outputs
-        self.activation = activation
 
     def build(self, input_shape):
         # Weights
@@ -25,16 +24,12 @@ class GraphConv(tf.keras.layers.Layer):
         temp = tf.keras.backend.batch_dot(node_feature, adj_mat)
         temp = tf.keras.backend.dot(temp, self.W)
         temp += self.bias
-        if self.activation == 'relu':
-            return tf.keras.backend.relu(temp)
-        else:
-            return tf.keras.backend.sigmoid(temp)
+        return tf.keras.backend.relu(temp)
 
     def get_config(self):
         config = super().get_config()
         config.update({
             "num_outputs": self.num_outputs,
-            "activation": self.activation,
         })
         return config
 
