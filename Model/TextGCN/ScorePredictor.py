@@ -60,8 +60,7 @@ def data_load(
 
 
 def model_build(
-        feature_input=None, gc_num_outputs=512, dilate_dim=512, gc_count=4, adj_mat_dim=256, score_dim=5,
-        softmax_out=False
+        feature_input=None, gc_num_outputs=1024, dilate_dim=1024, gc_count=4, adj_mat_dim=256, score_dim=5
 ):
     if feature_input is None:
         feature_input = tf.keras.Input(shape=(adj_mat_dim,))
@@ -73,17 +72,7 @@ def model_build(
         x = tf.keras.layers.BatchNormalization()(x)
         x = tf.keras.layers.Dense(adj_mat_dim, activation=tf.nn.selu)(x)
     x = tf.keras.layers.Flatten()(x)
-    if softmax_out:
-        outs = []
-        for _ in range(score_dim):
-            out = tf.keras.layers.Dense(2, activation=tf.nn.softmax)(x)
-            # out = tf.keras.backend.argmax(out)
-            out = out[:, 0]
-            out = tf.keras.backend.expand_dims(out)
-            outs.append(out)
-        outputs = tf.keras.backend.concatenate(outs)
-    else:
-        outputs = tf.keras.layers.Dense(score_dim, activation=tf.nn.sigmoid)(x)
+    outputs = tf.keras.layers.Dense(score_dim, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=[feature_input, adjacent_matrix], outputs=outputs)
     return model
 
@@ -94,7 +83,7 @@ def model_train(
 ):
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-5),
-        loss=tf.keras.losses.BinaryCrossentropy(),
+        loss=tf.keras.losses.BinaryFocalCrossentropy(),
         metrics=['accuracy'],
         run_eagerly=True
     )

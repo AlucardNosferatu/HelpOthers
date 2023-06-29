@@ -119,14 +119,20 @@ def batch_rename(save_by_batch='Batches', global_index=0):
     for i in range(len(first_level)):
         subset = [file for file in files if file.startswith('Input_{}_'.format(i))]
         for j in range(len(subset)):
+            if os.path.exists(os.path.join(save_by_batch, 'Input_{}.npy'.format(global_index))):
+                os.remove(os.path.join(save_by_batch, 'Input_{}.npy'.format(global_index)))
             os.rename(
                 os.path.join(save_by_batch, 'Input_{}_{}.npy'.format(i, j)),
                 os.path.join(save_by_batch, 'Input_{}.npy'.format(global_index))
             )
+            if os.path.exists(os.path.join(save_by_batch, 'Output_{}.npy'.format(global_index))):
+                os.remove(os.path.join(save_by_batch, 'Output_{}.npy'.format(global_index)))
             os.rename(
                 os.path.join(save_by_batch, 'Output_{}_{}.npy'.format(i, j)),
                 os.path.join(save_by_batch, 'Output_{}.npy'.format(global_index))
             )
+            if os.path.exists(os.path.join(save_by_batch, 'AdjMat_{}.npy'.format(global_index))):
+                os.remove(os.path.join(save_by_batch, 'AdjMat_{}.npy'.format(global_index)))
             os.rename(
                 os.path.join(save_by_batch, 'AdjMat_{}_{}.npy'.format(i, j)),
                 os.path.join(save_by_batch, 'AdjMat_{}.npy'.format(global_index))
