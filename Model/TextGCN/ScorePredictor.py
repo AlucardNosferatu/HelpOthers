@@ -60,19 +60,22 @@ def data_load(
 
 
 def model_build(
-        feature_input=None, gc_count=4, adj_mat_dim=256, score_dim=5
+        feature_input=None, gc_count=8, adj_mat_dim=256, score_dim=5
 ):
     if feature_input is None:
         feature_input = tf.keras.Input(shape=(adj_mat_dim,))
     adjacent_matrix = tf.keras.Input(shape=(adj_mat_dim, adj_mat_dim))
     x = feature_input
     x = tf.keras.layers.BatchNormalization()(x)
-    residual = x
+    residual = [x, x]
     for i in range(gc_count):
         x = GraphConv(num_outputs=adj_mat_dim)([x, adjacent_matrix])
-        if i % 1 == 0:
-            x += residual
-            residual = x
+        if i % 2 == 0:
+            x += residual[0]
+            residual[0] = x
+        if i % 4 == 0:
+            x += residual[1]
+            residual[1] = x
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Flatten()(x)
     outputs = tf.keras.layers.Dense(score_dim, activation=tf.nn.sigmoid)(x)
@@ -85,7 +88,7 @@ def model_train(
         step_per_epoch=5, val_split=0.25, workers=8
 ):
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-5),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4, decay=1e-6),
         loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy'],
         run_eagerly=True
