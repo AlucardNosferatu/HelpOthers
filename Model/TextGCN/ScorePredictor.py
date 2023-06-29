@@ -60,17 +60,20 @@ def data_load(
 
 
 def model_build(
-        feature_input=None, gc_num_outputs=1024, dilate_dim=1024, gc_count=4, adj_mat_dim=256, score_dim=5
+        feature_input=None, gc_count=8, conclude_dim=1024, adj_mat_dim=256, score_dim=5
 ):
     if feature_input is None:
         feature_input = tf.keras.Input(shape=(adj_mat_dim,))
     adjacent_matrix = tf.keras.Input(shape=(adj_mat_dim, adj_mat_dim))
     x = feature_input
+    feature_output = []
     for _ in range(gc_count):
-        x = GraphConv(num_outputs=gc_num_outputs, activation='relu')([x, adjacent_matrix])
-        x = tf.keras.layers.Dense(dilate_dim, activation=tf.nn.selu)(x)
+        x = GraphConv(num_outputs=adj_mat_dim, activation='relu')([x, adjacent_matrix])
         x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.Dense(adj_mat_dim, activation=tf.nn.selu)(x)
+        feature_output.append(x)
+    x = tf.keras.backend.concatenate(feature_output)
+    x = tf.keras.layers.Dense(conclude_dim, activation=tf.nn.selu)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Flatten()(x)
     outputs = tf.keras.layers.Dense(score_dim, activation=tf.nn.sigmoid)(x)
     model = tf.keras.Model(inputs=[feature_input, adjacent_matrix], outputs=outputs)
@@ -83,7 +86,7 @@ def model_train(
 ):
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3, decay=1e-5),
-        loss=tf.keras.losses.BinaryFocalCrossentropy(),
+        loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=['accuracy'],
         run_eagerly=True
     )
