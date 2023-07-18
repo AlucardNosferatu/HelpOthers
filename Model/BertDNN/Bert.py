@@ -15,12 +15,12 @@ bert_lock = threading.Lock()
 
 def embed_right_now(bert_in, mlm):
     bert_lock.acquire()
-    res = mlm.preprocessor(bert_in)
+    result = mlm.preprocessor(bert_in)
     bert_lock.release()
     bert_lock.acquire()
-    res = mlm.backbone(res)
+    result = mlm.backbone(result)
     bert_lock.release()
-    bert_out = res['pooled_output'].numpy()
+    bert_out = result['pooled_output'].numpy()
     return bert_out
 
 
@@ -44,9 +44,9 @@ def build_processor(
     else:
         print('使用预训练BERT来嵌入文本')
         masked_lm = keras_nlp.models.BertMaskedLM.from_preset(
-            "bert_tiny_en_uncased"
+            "bert_base_zh"
         )
-    masked_lm.preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_tiny_en_uncased")
+    masked_lm.preprocessor = keras_nlp.models.BertPreprocessor.from_preset("bert_base_zh")
     if saved_output is not None:
         setattr(masked_lm, 'saved_output_path', saved_output)
         if os.path.exists(saved_output):
@@ -101,8 +101,8 @@ def embed(input_str, masked_lm, save=True, load=True):
 
 
 def tokenize(input_str, processor):
-    res = processor.preprocessor(input_str)
-    vec = res['token_ids']
+    result = processor.preprocessor(input_str)
+    vec = result['token_ids']
     return vec
 
 
@@ -112,11 +112,7 @@ def detokenize(input_vec, processor):
     if not batch:
         text = [text]
     text = [item.numpy().decode('utf-8').split(' [SEP] ')[0].replace('[CLS] ', '') for item in text]
-    for sep in ['.', '!', '?', ',']:
-        for i in range(len(text)):
-            while ' ' + sep in text[i]:
-                text: list
-                text[i] = text[i].replace(' ' + sep, sep)
+    text = [item.replace(' ', '') for item in text]
     if len(text) == 1:
         text = text[0]
     return text
@@ -139,7 +135,7 @@ def bert_train(data='../../Data/my_personality.csv'):
         )
     else:
         masked_lm = keras_nlp.models.BertMaskedLM.from_preset(
-            "bert_tiny_en_uncased",
+            "bert_base_zh",
         )
     masked_lm.trainable = True
     ckpt = tf.keras.callbacks.ModelCheckpoint(
@@ -154,22 +150,22 @@ def bert_train(data='../../Data/my_personality.csv'):
 
 
 def bert_test(use_post_trained=True, batch_test=True):
-    processor_ = build_processor(
+    processor = build_processor(
         use_post_trained=use_post_trained, path_post_trained='Bert.h5',
-        saved_output='../../Data/BertGCN/SavedBertEmbedding.pkl'
+        saved_output='SavedBertEmbedding.pkl'
     )
     old_txt = [
-        'I miss Carol a lot. Where is she now?',
-        'We should be together.'
+        '我很想念我老婆，她在哪里？',
+        '我和她本应在一起的。'
     ]
     if not batch_test:
         index = random.choice(list(range(len(old_txt))))
         old_txt = old_txt[index]
     vec_ = tokenize(
         old_txt,
-        processor_
+        processor
     )
-    new_txt = detokenize(vec_, processor_)
+    new_txt = detokenize(vec_, processor)
     if type(old_txt) is not list:
         old_txt = [old_txt]
     old_txt = [item.lower() for item in old_txt]
@@ -180,8 +176,12 @@ def bert_test(use_post_trained=True, batch_test=True):
 
 
 if __name__ == '__main__':
-    bert_train()
-    # bert_test(use_post_trained=True, batch_test=True)
-    # bert_test(use_post_trained=True, batch_test=False)
+    # bert_train()
     # bert_test(use_post_trained=False, batch_test=True)
     # bert_test(use_post_trained=False, batch_test=False)
+    processor_ = build_processor(
+        use_post_trained=False, path_post_trained='Bert.h5',
+        saved_output='SavedBertEmbedding.pkl'
+    )
+    res = embed(input_str='今年政企客户的需求很多。', masked_lm=processor_)
+    print(res)
